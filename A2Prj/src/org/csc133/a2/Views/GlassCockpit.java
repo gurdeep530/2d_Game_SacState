@@ -53,12 +53,12 @@ public class GlassCockpit extends Container {
 
     public void update()
     {
-        fires.setText(String.valueOf(gw.numberOfFires()));
-        firesSizes.setText(String.valueOf(gw.fireSizes()));
-        speed.setText(String.valueOf(gw.speed()));
-        heading.setText(String.valueOf(gw.heading()));
-        fuel.setText(String.valueOf(gw.fuel()));
-        damages.setText(String.valueOf(gw.damages()));
-        loss.setText(String.valueOf(gw.losses()));
+        fires.setText(String.valueOf(gw.getNumberOfFiresForGlassCockpit()));
+        firesSizes.setText(String.valueOf(gw.getFireSizesForGlassCockpit()));
+        speed.setText(String.valueOf(gw.getSpeedForGlassCockpit()));
+        heading.setText(String.valueOf(gw.getHeadingForGlassCockpit()));
+        fuel.setText(String.valueOf(gw.getFuelGlassCockpit()));
+        damages.setText(String.valueOf(gw.getDamagesForGlassCockpit()));
+        loss.setText(String.valueOf(gw.getLossesForGlassCockpit()));
     }
 }

@@ -1,7 +1,6 @@
 package org.csc133.a2;
 
 import com.codename1.charts.util.ColorUtil;
-import com.codename1.ui.Display;
 import com.codename1.ui.Form;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.util.UITimer;
@@ -16,9 +15,6 @@ public class Game extends Form implements Runnable {
     private final MapView mv;
     private final GlassCockpit gc;
     private final ControlCluster cc;
-
-    final static int DISP_W = Display.getInstance().getDisplayWidth();
-    final static int DISP_H = Display.getInstance().getDisplayHeight();
 
     public Game() {
 
@@ -51,8 +47,8 @@ public class Game extends Form implements Runnable {
 
     @Override
     public void run() {
-        gw.tick();
         mv.update();
+        gw.tick();
         gc.update();
     }
 

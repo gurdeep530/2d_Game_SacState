@@ -20,15 +20,16 @@ public class Fire extends Fixed implements Drawable {
     private int DISP_W;
     private final Random RND = new Random();
 
-    public Fire(Fire fire, int i, Dimension worldSize)
+    public Fire(Fire fire, Dimension worldSize)
     {
         setLocation(new Point2D(0,0));
         setDimensions(new Dimension(0,0));
         setColor(ColorUtil.MAGENTA);
 
         this.DISP_W = worldSize.getWidth();
-        getFire(i, fire.getLocation());
+        getFire(fire.getLocation());
     }
+
     public Fire()
     {}
 
@@ -41,7 +42,7 @@ public class Fire extends Fixed implements Drawable {
         g.setFont(f);
         g.setColor(color);
 
-        int fire = whichFire(containerOrigin);
+        int fire = whichFireIsMapViewTryingToDraw(containerOrigin);
         if(FIRE_SIZE.get(fire).getWidth() > 0) {
 
             label = String.valueOf(FIRE_SIZE.get(fire).getWidth());
@@ -57,51 +58,7 @@ public class Fire extends Fixed implements Drawable {
         }
     }
 
-    private void getFire(int i, Point2D loc) {
-        makeFires(loc);
-        //setLocation(FIRE.get(i));
-        setDimensions(FIRE_SIZE.get(i));
-    }
-
-    private int whichFire(Point containerOrigin)
-    {
-        int whichFire = 0;
-        for(int i = 0; i<FIRE_SIZE.size();i++)
-        {
-            if(containerOrigin.getX() == FIRE.get(i).getX()
-                    && containerOrigin.getY() == FIRE.get(i).getY())
-            {
-                whichFire = i;
-                break;
-            }
-        }
-        return whichFire;
-    }
-
-    private void makeFires(Point2D loc)
-    {
-
-        int num = ((int) ((DISP_W* .005) + RND.nextInt(15)));
-        RANDOM_NUM.add(checkDim(num));
-        int i = RANDOM_NUM.size() - 1;
-
-        FIRE_SIZE.add(new Dimension(RANDOM_NUM.get(i), RANDOM_NUM.get(i)));
-        FIRE.add(new Point2D(loc.getX(), loc.getY()));
-        i = FIRE.size() - 1;
-        //setLocation(FIRE.get(i));
-
-    }
-
-    private int checkDim(int num)
-    {
-        while(RANDOM_NUM.contains(num))
-        {
-            num +=1;
-        }
-        return num;
-    }
-
-    public Point2D[] fireBounds(GameObject go) {
+    public Point2D[] getFireBounds(GameObject go) {
 
         Point2D[] bounds = new Point2D[4];
 
@@ -128,7 +85,7 @@ public class Fire extends Fixed implements Drawable {
 
     public void shrink(GameObject go, int water) {
 
-        int i = whichFire(go.convertToPoint(go.getLocation()));
+        int i = whichFireIsMapViewTryingToDraw(go.convertToPoint(go.getLocation()));
 
         FIRE_SIZE.get(i).setWidth(FIRE_SIZE.get(i).getWidth() - (water / 5));
 
@@ -159,6 +116,44 @@ public class Fire extends Fixed implements Drawable {
     public ArrayList<Dimension> FireSizes()
     {
         return FIRE_SIZE;
+    }
+
+    private int whichFireIsMapViewTryingToDraw(Point containerOrigin)
+    {
+        int whichFire = 0;
+        for(int i = 0; i<FIRE_SIZE.size();i++)
+        {
+            if(containerOrigin.getX() == FIRE.get(i).getX()
+                    && containerOrigin.getY() == FIRE.get(i).getY())
+            {
+                whichFire = i;
+                break;
+            }
+        }
+        return whichFire;
+    }
+
+    private void getFire(Point2D loc) {
+        createLocalInstanceOfFires(loc);
+    }
+
+    private void createLocalInstanceOfFires(Point2D loc) {
+
+        int num = ((int) ((DISP_W * .005) + RND.nextInt(15)));
+        RANDOM_NUM.add(changeRandomNumberIfItExistsInTheArray(num));
+        int i = RANDOM_NUM.size() - 1;
+
+        FIRE_SIZE.add(new Dimension(RANDOM_NUM.get(i), RANDOM_NUM.get(i)));
+        FIRE.add(new Point2D(loc.getX(), loc.getY()));
+    }
+
+    private int changeRandomNumberIfItExistsInTheArray(int num)
+    {
+        while(RANDOM_NUM.contains(num))
+        {
+            num +=1;
+        }
+        return num;
     }
 
 }

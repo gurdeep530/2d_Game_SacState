@@ -20,6 +20,7 @@ public class HeliPad extends Fixed implements Drawable {
         setLocation(HeliPadCircleLocation());
         setDimensions(HeliPadCircleDimension());
     }
+
     @Override
     public void draw(Graphics g, Point containerOrigin) {
         g.setColor(color);

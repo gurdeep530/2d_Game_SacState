@@ -32,6 +32,7 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         else
         setLocation(loc);
     }
+
     @Override
     public void steerLeft() {
         ChangeDirection(-15);
@@ -50,7 +51,6 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     //Checks for if heli is over the River and fire.
     //I put them in the Heli class because the heli is
     //performing the action on the riverDimension/fire so the heli needs
-
     //to know if it is over them
     public boolean IsHeliOverRiver(Point2D heliLocChange) {
         Point2D heliBaseCoords;

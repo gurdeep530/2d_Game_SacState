@@ -16,7 +16,7 @@ public class GameWorld {
     private Helicopter h;
     private Building b;
     private static int water;
-    private static int HELI_FUEL = 25000;
+    private static int HELI_FUEL;
     private final ArrayList<GameObject> GAME_OBJECTS = new ArrayList<>();
 
 
@@ -27,6 +27,7 @@ public class GameWorld {
     public void init() {
         water = 0;
         ticker = 0;
+        HELI_FUEL = 25000;
 
         h = new Helicopter(HELI_LOC_CHANGE, worldSize);
         f = new Fire();
@@ -38,7 +39,7 @@ public class GameWorld {
             b = new Building(i, worldSize);
             GAME_OBJECTS.add(b);
             for (int j = 0; j < 3; j++) {
-                f = new Fire(b.setFireInBuilding(f,i), j, worldSize);
+                f = new Fire(b.setFireInBuilding(f,i), worldSize);
                 GAME_OBJECTS.add(f);
             }
         }
@@ -80,15 +81,15 @@ public class GameWorld {
 
         }
         if (HELI_FUEL <= 0) {
-            fuelLosingMenu();
+            getFuelLosingMenu();
         }
-        else if(damages() == 100)
+        else if(getDamagesForGlassCockpit() >= 100)
         {
-            damageLosingMenu();
+            getDamageLosingMenu();
         }
         else if (f.areFiresOut() && h.CanHeliLand(HELI_LOC_CHANGE))
         {
-            WinningMenu();
+            getWinningMenu();
         }
     }
 
@@ -105,7 +106,7 @@ public class GameWorld {
         int i = 0;
         for(GameObject go: getGameObjectCollection()) {
             if(go instanceof Fire) {
-                if (h.IsHeliOverFire(HELI_LOC_CHANGE, f.fireBounds(go))) {
+                if (h.IsHeliOverFire(HELI_LOC_CHANGE, f.getFireBounds(go))) {
                     f.shrink(go, water);
                     break;
                 }
@@ -135,7 +136,7 @@ public class GameWorld {
     }
 
 
-    private void fuelLosingMenu() {
+    private void getFuelLosingMenu() {
         Dialog d = new Dialog("Game Over, You Lose!");
         final Button YES = new Button("Play Again?");
         final Button NO = new Button("No, too hard");
@@ -152,7 +153,7 @@ public class GameWorld {
 
     }
 
-    private void damageLosingMenu()
+    private void getDamageLosingMenu()
     {
         Dialog d = new Dialog("Game Over, You Lose");
         final Button YES = new Button("Play Again?");
@@ -168,11 +169,14 @@ public class GameWorld {
         d.add(BorderLayout.WEST, NO);
         d.show();
     }
-    private void WinningMenu() {
+    private void getWinningMenu() {
         Dialog d = new Dialog("WINNER!");
         final Button YES = new Button("Play Again?");
         final Button NO = new Button("No, too hard");
-        Label SCORE = new Label("Score: " + (100 - damages()));
+        Label SCORE = new Label
+                ("Score: " + (100 - getDamagesForGlassCockpit()));
+
+
         YES.addActionListener(evt -> new Game());
         NO.addActionListener(evt -> quit());
         SCORE.setUIID("PopupBody");
@@ -189,7 +193,7 @@ public class GameWorld {
         return GAME_OBJECTS;
     }
 
-    public int numberOfFires()
+    public int getNumberOfFiresForGlassCockpit()
     {
         int fireSize = 0;
         for(int i = 0; i <  f.FireSizes().size() - 1; i++)
@@ -202,28 +206,28 @@ public class GameWorld {
         }
         return fireSize;
     }
-    public int fireSizes()
+    public int getFireSizesForGlassCockpit()
     {
         int fireSize = 0;
-        for(int i = 0; i < numberOfFires();i++)
+        for(int i = 0; i < getNumberOfFiresForGlassCockpit(); i++)
         {
             fireSize += f.FireSizes().get(i).getWidth();
         }
         return fireSize;
     }
-    public int speed()
+    public int getSpeedForGlassCockpit()
     {
         return h.Speed();
     }
-    public int heading()
+    public int getHeadingForGlassCockpit()
     {
         return h.Heading() + 90;
     }
-    public int fuel()
+    public int getFuelGlassCockpit()
     {
         return HELI_FUEL;
     }
-    public int damages()
+    public int getDamagesForGlassCockpit()
     {
         int totalDam = 0;
         int[] Dams = b.getBuildingDamage();
@@ -233,9 +237,12 @@ public class GameWorld {
         }
         totalDam = totalDam/3;
 
+        if(totalDam > 100)
+            totalDam = 100;
+
         return totalDam;
     }
-    public int losses()
+    public int getLossesForGlassCockpit()
     {
         int totalLoss = 0;
         int[] Values = b.getBuildingValue();
@@ -243,7 +250,7 @@ public class GameWorld {
         {
             totalLoss += Values[i];
         }
-        totalLoss = (totalLoss * damages()) /100;
+        totalLoss = (totalLoss * getDamagesForGlassCockpit()) /100;
 
         return totalLoss;
     }

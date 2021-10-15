@@ -15,8 +15,8 @@ public class Movable extends GameObject{
         double angleCos = AngleCos();
 
         if (SPEED > 0) {
-            NEW_POS_Y += (int) (angleSin * (1.5*SPEED));
-            NEW_POS_X += (int) (angleCos * (1.5*SPEED));
+            NEW_POS_Y += (int) (angleSin * (SPEED));
+            NEW_POS_X += (int) (angleCos * (SPEED));
 
             TOP_POS_X += (int) (angleSin * 5);
             TOP_POS_Y += (int) (angleCos * 5);

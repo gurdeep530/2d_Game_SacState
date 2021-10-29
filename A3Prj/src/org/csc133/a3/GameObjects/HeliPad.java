@@ -18,16 +18,15 @@ public class HeliPad extends Fixed implements Drawable {
         this.DISP_H = worldSize.getHeight();
         this.DISP_W = worldSize.getWidth();
         setColor(ColorUtil.LTGRAY);
-        setLocation(HeliPadSquareLocation());
-        setDimensions(HeliPadSquareDimension());
-        scale(1,1);
+
+        translate(DISP_W/2.0,DISP_H - (DISP_H - (DISP_H*.95)));
+
     }
 
     @Override
     public void localDraw(Graphics g, Point containerOrigin, Point originScreen) {
         g.setColor(color);
 
-        setLocation(HeliPadSquareLocation());
         setDimensions(HeliPadSquareDimension());
 
         Transform gHeliPadForm = preLTTransform(g,originScreen);
@@ -36,7 +35,6 @@ public class HeliPad extends Fixed implements Drawable {
 
         drawHeliPadSquare(g,containerOrigin);
 
-        containerOrigin = convertToPoint(HeliPadCircleLocation());
         setDimensions(HeliPadCircleDimension());
 
         drawHeliPadCircle(g, containerOrigin);
@@ -98,15 +96,20 @@ public class HeliPad extends Fixed implements Drawable {
 
     private void drawHeliPadSquare(Graphics g, Point containerOrigin)
     {
+        containerOrigin = new Point(-getDimensionsW()/2,-getDimensionsW()/2);
+
         g.drawRect( containerOrigin.getX(),
                     containerOrigin.getY(),
                     getDimensionsW(),
                     getDimensionsH(),
                     5);
+        g.drawLine(-getDimensionsW()/2,0,getDimensionsW()/2,0);
+        g.drawLine(0,-getDimensionsH()/2,0,getDimensionsH()/2);
     }
 
     private void drawHeliPadCircle(Graphics g, Point containerOrigin)
     {
+        containerOrigin = new Point(-getDimensionsW()/2,-getDimensionsW()/2);
         g.drawArc(  containerOrigin.getX(),
                     containerOrigin.getY(),
                     getDimensionsW(),

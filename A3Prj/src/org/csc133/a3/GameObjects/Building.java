@@ -23,7 +23,8 @@ public class Building extends Fixed implements Drawable {
     private final static Point2D[] BUILDINGS_LOC = new Point2D[4];
     private final static Dimension[] BUILDING_DIM = new Dimension[4];
     private final static int[] BUILDING_VALUE = new int[4];
-    private final static int[] BUILDING_DAMAGE = new int[4];
+    private final static int[] BUILDING_DAMAGE = new int[4];;
+
 
     private final River r;
 
@@ -34,7 +35,7 @@ public class Building extends Fixed implements Drawable {
         r = new River(worldSize);
         createBuildings(i);
 
-        scale(1,1);
+        translate(DISP_W/2.0,DISP_H/2.0);
     }
 
     @Override
@@ -50,7 +51,7 @@ public class Building extends Fixed implements Drawable {
         localTransform(gBuildingForm);
         postLTTransform(g, originScreen,gBuildingForm);
 
-        labels = getLabels(containerOrigin);
+        labels = getLabels();
         drawBuilding(g, containerOrigin);
         drawBuildingLabels(g,containerOrigin,labels);
 
@@ -143,19 +144,18 @@ public class Building extends Fixed implements Drawable {
 
     }
 
-    private int whichBuildingIsMapViewTryingToDraw(Point containerOrigin)
+    private int whichBuildingIsMapViewTryingToDraw()
     {
-        int whichFire = 0;
+        int whichBuilding = 0;
         for(int i = 1; i<=3;i++)
         {
-            Point loc = convertToPoint(BUILDINGS_LOC[i]);
-            if(containerOrigin.getX() == loc.getX()
-                    && containerOrigin.getY() == loc.getY())
+            if( getDimensionsW() == BUILDING_DIM[i].getWidth()
+                    && getDimensionsH() == BUILDING_DIM[i].getHeight())
             {
-                whichFire = i;
+                whichBuilding = i;
             }
         }
-        return whichFire;
+        return whichBuilding;
     }
 
     private void createTheBuildingAboveRiver()
@@ -167,11 +167,13 @@ public class Building extends Fixed implements Drawable {
                 riverLoc.getY() - (DISP_H / 6.0));
         setDimensions((DISP_W - RANDOM_NUM), ((int) ((DISP_H * .2) / 2)));
 
-        BUILDINGS_LOC[1] = new Point2D(getLocationX(), getLocationY());
+        BUILDINGS_LOC[1] = new Point2D(-getDimensionsW()/2.0, -getDimensionsH()/2.0);
         BUILDING_DIM[1] = new Dimension(getDimensionsW(),getDimensionsH());
 
         RANDOM_NUM = RND.nextInt(1000 - 100) +100;
         BUILDING_VALUE[1] = RANDOM_NUM;
+
+        translate(0, riverLoc.getY() - 40);
     }
 
     private void createTheBuildingOnLeft()
@@ -186,20 +188,44 @@ public class Building extends Fixed implements Drawable {
 
         RANDOM_NUM = RND.nextInt(1000 - 100) +100;
         BUILDING_VALUE[2] = RANDOM_NUM;
+
+        translate((DISP_W/-3.0),200);
     }
 
     private void createTheBuildingOnRight()
     {
-        int RANDOM_NUM = (RND.nextInt(4 - 2) +2 );
-
         setLocation(DISP_W - (DISP_W * .2), DISP_H /2.0);
-        setDimensions((int) (DISP_W / 8.0), ((DISP_H) / RANDOM_NUM));
 
-        BUILDINGS_LOC[3] =  new Point2D(getLocationX(), getLocationY());
+        setDimensions((int) (DISP_W / 8.0), getUniqueRandomNum());
+
+        BUILDINGS_LOC[3] =  new Point2D(DISP_W/3.0,200);
         BUILDING_DIM[3] = new Dimension(getDimensionsW(),getDimensionsH());
 
-        RANDOM_NUM = RND.nextInt(1000 - 100) +100;
+        int RANDOM_NUM = RND.nextInt(1000 - 100) +100;
         BUILDING_VALUE[3] = RANDOM_NUM;
+
+        translate(DISP_W/3.0,200);
+    }
+
+    private Boolean isBuildingDimTheSame()
+    {
+        Boolean check = false;
+        if(BUILDING_DIM[3].getHeight() == BUILDING_DIM[2].getHeight())
+        {
+            check = true;
+        }
+        return check;
+    }
+
+    private int getUniqueRandomNum()
+    {
+        int RANDOM_NUM = (RND.nextInt(4 - 2) +2 );
+        int height = ((DISP_H) / RANDOM_NUM);
+        while(isBuildingDimTheSame())
+        {
+            RANDOM_NUM = (RND.nextInt(4 - 2) +2 );
+        }
+        return height;
     }
 
     private void setBuildingDamage()
@@ -207,6 +233,7 @@ public class Building extends Fixed implements Drawable {
         for(int i = 1; i<=3; i++) {
             float dam =
                     (BUILDING_DIM[i].getWidth() * BUILDING_DIM[i].getHeight());
+
             BUILDING_DAMAGE[i] = (int) ((buildingDamage[i-1] / dam) * 100);
 
             if(BUILDING_DAMAGE[i]>100)
@@ -214,10 +241,10 @@ public class Building extends Fixed implements Drawable {
         }
     }
 
-    private String[] getLabels(Point containerOrigin )
+    private String[] getLabels()
     {
         String[] labels = new String[2];
-        int i = whichBuildingIsMapViewTryingToDraw(containerOrigin);
+        int i = whichBuildingIsMapViewTryingToDraw();
         labels[0] = ("V: " + BUILDING_VALUE[i]);
         labels[1] = ("D: " + BUILDING_DAMAGE[i] + "%");
 
@@ -226,20 +253,22 @@ public class Building extends Fixed implements Drawable {
 
     private void drawBuilding(Graphics g, Point containerOrigin)
     {
-        g.drawRect( containerOrigin.getX(),
-                    containerOrigin.getY(),
+        g.drawRect( -getDimensionsW()/2,
+                    -getDimensionsH()/2,
                     getDimensionsW(),
                     getDimensionsH(),5);
+        g.drawLine(-getDimensionsW()/2,0,getDimensionsW()/2,0);
+        g.drawLine(0,-getDimensionsH()/2,0,getDimensionsH()/2);
     }
 
     private void drawBuildingLabels(Graphics g, Point containerOrigin, String[] labels)
     {
         g.drawString(labels[0],
-                containerOrigin.getX() + getDimensionsW() + 20,
-                containerOrigin.getY() + getDimensionsH() - 50);
+                 (getDimensionsW()/2) + 20,
+                 (getDimensionsH()/2) - 50);
         g.drawString(labels[1],
-                containerOrigin.getX() + getDimensionsW() + 20,
-                containerOrigin.getY() + getDimensionsH());
+                 (getDimensionsW()/2) + 20,
+                    (getDimensionsH()/2));
     }
 
 

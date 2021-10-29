@@ -6,8 +6,11 @@ import com.codename1.ui.Transform;
 import com.codename1.ui.geom.Dimension;
 import com.codename1.ui.geom.Point;
 import com.codename1.ui.geom.Point2D;
+import org.csc133.a3.Game;
 import org.csc133.a3.Interfaces.Drawable;
 import org.csc133.a3.Interfaces.Steerable;
+
+import java.util.ArrayList;
 
 import static com.codename1.ui.CN.*;
 
@@ -21,27 +24,91 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     private final HeliPad hp;
     private final River r;
     public int MAX_SPEED = 10;
+    private ArrayList<GameObject> heliParts;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    private static final int BUBBLE_RADIUS = 125;
+    private static class HeliBubble extends GameObject {
+        public HeliBubble()
+        {
+            setDimensions(new Dimension(2*Helicopter.BUBBLE_RADIUS,
+                    2* Helicopter.BUBBLE_RADIUS));
+
+        }
+        @Override
+        public void localDraw(Graphics g, Point containerOrigin, Point originScreen){
+            containerTranslate(g,containerOrigin);
+            cn1ForwardPrimitiveTranslate(g,getDimension());
+
+            g.drawArc(0,0,
+                        getDimensionsW(),getDimensionsH(),
+                        -135,-270);
+        }
+    }
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    private static final int ENGINE_BLOCK_W = (int)(BUBBLE_RADIUS*1.8);
+    private static final int ENGINE_BLOCK_H = ENGINE_BLOCK_W/3;
+
+    private static class HeliEngineBlock extends GameObject{
+        public HeliEngineBlock()
+        {
+            setDimensions(new Dimension( Helicopter.ENGINE_BLOCK_W,
+                                         Helicopter.ENGINE_BLOCK_H));
+        }
+        public void localDraw(Graphics g, Point containerOrigin, Point originScreen)
+        {
+            containerTranslate(g,containerOrigin);
+            cn1ForwardPrimitiveTranslate(g,getDimension());
+            g.drawRect(0,0,getDimensionsW(),getDimensionsH());
+        }
+    }
+
 
     public Helicopter(Point2D loc, Dimension worldSize)
     {
         hp = new HeliPad(worldSize);
         r = new River(worldSize);
+        heliParts = new ArrayList<>();
+        heliParts.add(new HeliBubble());
+        heliParts.add(new HeliEngineBlock());
 
         setColor(ColorUtil.YELLOW);
         if(loc == null)
             setLocation(0,0);
         else
-        setLocation(loc);
+            setLocation(loc);
     }
+
+    @Override
+    public void localDraw(Graphics g, Point containerOrigin, Point originScreen)
+    {
+        Transform t = Transform.makeIdentity();
+        g.getTransform(t);
+        HeliBase();
+        t.translate((float)baseLocation.getX(),(float) baseLocation.getY());
+        t.scale(.33f,.33f);
+        t.concatenate(myRotation);
+        g.setTransform(t);
+
+        g.setColor(color);
+        for(GameObject go: heliParts)
+        {
+            go.localDraw(g,containerOrigin,originScreen);
+        }
+        g.resetAffine();
+    }
+
 
     @Override
     public void steerLeft() {
         ChangeDirection(-15);
+        rotate(15);
     }
 
     @Override
     public void steerRight() {
         ChangeDirection(15);
+        rotate(15);
     }
 
     public int[] newPositions()
@@ -87,7 +154,6 @@ public class Helicopter extends Movable implements Steerable, Drawable {
                 && circleBounds[2].getY() >= heliBaseCoords.getY();
     }
 
-    //Setting the labels because they change threw out the game
     public void setLabels(int fuel, int water) {
         HELI_LABELS[0] = ("F: " + fuel);
         HELI_LABELS[1] = ("W: " + water);
@@ -97,7 +163,8 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     //after the heli starts moving it adds the new coords to the
     //old.
     //localDraw function
-    @Override
+
+    /*
     public void localDraw(Graphics g, Point containerOrigin, Point originScreen) {
         g.setColor(color);
 
@@ -144,7 +211,7 @@ public class Helicopter extends Movable implements Steerable, Drawable {
                     (labelLoc.getY() + labelSpacing));
 
     }
-
+*/
 
     //I made these initial functions so that we
     //wouldn't have to do the math over and over
@@ -220,7 +287,9 @@ public class Helicopter extends Movable implements Steerable, Drawable {
                          (int)orgLoc.getY() + newLoc.getY());
     }
 
-    class Engine {
+
+
+    private class Engine {
         private void On() {
 
         }

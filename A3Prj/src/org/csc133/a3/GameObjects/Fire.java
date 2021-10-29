@@ -18,7 +18,7 @@ public class Fire extends Fixed implements Drawable {
     private static final ArrayList<Dimension> FIRE_SIZE = new ArrayList<>();
     private static final ArrayList<Point2D> FIRE = new ArrayList<>();
     private static final ArrayList<Integer> RANDOM_NUM = new ArrayList<>();
-    private int DISP_W;
+    private int DISP_W,DISP_H;
 
     private final Random RND = new Random();
 
@@ -29,9 +29,10 @@ public class Fire extends Fixed implements Drawable {
         setColor(ColorUtil.MAGENTA);
 
         this.DISP_W = worldSize.getWidth();
+        this.DISP_H = worldSize.getHeight();
         getFire(fire.getLocation());
 
-        scale(1,1);
+        translate(DISP_W/2.0,DISP_H/2.0);
     }
 
     public Fire()

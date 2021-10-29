@@ -98,7 +98,7 @@ public class GameObject implements Drawable {
 
     protected void localTransform(Transform gXForm)
     {
-        gXForm.translate(myTranslation.getTranslateX(),myTranslation.getTranslateX());
+        gXForm.translate(myTranslation.getTranslateX(),myTranslation.getTranslateY());
         gXForm.concatenate(myRotation);
         gXForm.scale(myScale.getScaleX(),myScale.getScaleY());
     }
@@ -124,6 +124,14 @@ public class GameObject implements Drawable {
     {
         gXForm.translate(-originScreen.getX(),-originScreen.getY());
         g.setTransform(gXForm);
+    }
+
+    protected void containerTranslate(Graphics g, Point parentOrigin)
+    {
+        Transform gxForm = Transform.makeIdentity();
+        g.getTransform(gxForm);
+        gxForm.translate(parentOrigin.getX(), parentOrigin.getY());
+        g.setTransform(gxForm);
     }
 
     protected void cn1ForwardPrimitiveTranslate(Graphics g, Dimension pDimension)

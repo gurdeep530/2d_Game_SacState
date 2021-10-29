@@ -25,13 +25,15 @@ public class MapView extends Container{
     {
         super.paint(g);
 
-        setupVTM(g);
-
         for(GameObject go: gw.getGameObjectCollection()) {
-            Point parentOrigin = go.convertToPoint(go.getLocation());
+            Point parentOrigin = new Point(this.getX(), this.getY());
             Point screenOrigin = new Point(getAbsoluteX(),getAbsoluteY());
+            //setupVTM(g);
             go.localDraw(g,parentOrigin, screenOrigin);
+            g.drawLine(-100,0,100,0);
+            g.drawLine(0,-100,0,100);
         }
+
         g.resetAffine();
     }
 
@@ -81,7 +83,6 @@ public class MapView extends Container{
         theVTM.concatenate(worldToND);
 
         createTransformForVTM(g,theVTM);
-
     }
     private void createTransformForVTM(Graphics g,Transform theVTM)
     {

@@ -19,12 +19,21 @@ public class HeliPad extends Fixed implements Drawable {
         this.DISP_W = worldSize.getWidth();
         setColor(ColorUtil.LTGRAY);
 
-        translate(DISP_W/2.0,DISP_H - (DISP_H - (DISP_H*.95)));
+        translate(DISP_W/4.0, DISP_H/2.15);
 
     }
 
+
     @Override
-    public void localDraw(Graphics g, Point containerOrigin, Point originScreen) {
+    public void draw(Graphics g, Point containerOrigin, Point screenOrigin)
+    {
+        g.setTransform(flipGameObjectsAfterVTM(containerOrigin,screenOrigin));
+        localDraw(g,containerOrigin,screenOrigin);
+        g.resetAffine();
+    }
+
+
+    void localDraw(Graphics g, Point containerOrigin, Point originScreen) {
         g.setColor(color);
 
         setDimensions(HeliPadSquareDimension());
@@ -103,8 +112,6 @@ public class HeliPad extends Fixed implements Drawable {
                     getDimensionsW(),
                     getDimensionsH(),
                     5);
-        g.drawLine(-getDimensionsW()/2,0,getDimensionsW()/2,0);
-        g.drawLine(0,-getDimensionsH()/2,0,getDimensionsH()/2);
     }
 
     private void drawHeliPadCircle(Graphics g, Point containerOrigin)

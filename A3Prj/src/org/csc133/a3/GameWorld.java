@@ -29,7 +29,7 @@ public class GameWorld {
         ticker = 0;
         HELI_FUEL = 25000;
 
-        h = new Helicopter(HELI_LOC_CHANGE, worldSize);
+        h = new Helicopter(worldSize);
         f = new Fire();
 
         GAME_OBJECTS.add(new HeliPad(worldSize));
@@ -62,7 +62,7 @@ public class GameWorld {
             HELI_LOC_CHANGE.setY(h.newPositions()[1]);
 
             GAME_OBJECTS.set(GAME_OBJECTS.size()-1,
-                            new Helicopter(HELI_LOC_CHANGE,worldSize));
+                            new Helicopter(worldSize));
 
             ticker++;
 
@@ -192,7 +192,6 @@ public class GameWorld {
     {
         return GAME_OBJECTS;
     }
-
     public int getNumberOfFiresForGlassCockpit()
     {
         int fireSize = 0;
@@ -254,8 +253,12 @@ public class GameWorld {
 
         return totalLoss;
     }
-
     public void setDimension(Dimension worldSize) {
         this.worldSize = worldSize;
+    }
+
+    public void updateLocalTransforms()
+    {
+        h.updateLocalTransforms();
     }
 }

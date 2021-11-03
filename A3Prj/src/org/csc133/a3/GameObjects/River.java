@@ -11,7 +11,6 @@ import org.csc133.a3.Interfaces.Drawable;
 public class River extends Fixed implements Drawable {
     private final int DISP_H;
     private final int DISP_W;
-    private Point2D riverLoc;
 
     public River(Dimension worldSize)
     {
@@ -20,13 +19,19 @@ public class River extends Fixed implements Drawable {
 
         setColor(ColorUtil.BLUE);
         setDimensions(RiverDimension());
-        //riverLoc = new Point2D(RiverLocation().getX(),RiverLocation().getY());
 
-        translate(DISP_W/2.0,DISP_H*.3);
+        translate(DISP_W/4.0,DISP_H/6.0);
     }
 
     @Override
-    public void localDraw(Graphics g, Point containerOrigin, Point screenOrigin) {
+    public void draw(Graphics g, Point containerOrigin, Point screenOrigin)
+    {
+        g.setTransform(flipGameObjectsAfterVTM(containerOrigin,screenOrigin));
+        localDraw(g,containerOrigin,screenOrigin);
+        g.resetAffine();
+    }
+
+    void localDraw(Graphics g, Point containerOrigin, Point screenOrigin) {
 
         g.setColor(color);
 
@@ -34,18 +39,17 @@ public class River extends Fixed implements Drawable {
         localTransform(gRiverForm);
         postLTTransform(g, screenOrigin,gRiverForm);
 
-        g.drawRect( (int) -getDimensionsW()/2,
-                    (int)-getDimensionsH()/2,
+        g.drawRect( -getDimensionsW()/2,
+                    -getDimensionsH()/2,
                     getDimensionsW(),getDimensionsH(),5);
-        g.drawLine(-getDimensionsW()/2,0,getDimensionsW()/2,0);
-        g.drawLine(0,-getDimensionsH()/2,0,getDimensionsH()/2);;
+
         resetTranformToOrginal(g);
 
         g.resetAffine();
     }
 
     Point2D RiverLocation() {
-        return new Point2D(-DISP_W/2.0, ((int) -(DISP_H * .30)));
+        return new Point2D(DISP_W/2.0, ((int) (DISP_H * .30)));
     }
     private Dimension RiverDimension()
     {

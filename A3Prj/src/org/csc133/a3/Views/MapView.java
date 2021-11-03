@@ -12,8 +12,8 @@ import org.csc133.a3.GameWorld;
 public class MapView extends Container{
 
     GameWorld gw;
+    Helicopter h;
     private static int counter = 0;
-
 
     public MapView(GameWorld gw)
     {
@@ -28,10 +28,8 @@ public class MapView extends Container{
         for(GameObject go: gw.getGameObjectCollection()) {
             Point parentOrigin = new Point(this.getX(), this.getY());
             Point screenOrigin = new Point(getAbsoluteX(),getAbsoluteY());
-            //setupVTM(g);
-            go.localDraw(g,parentOrigin, screenOrigin);
-            g.drawLine(-100,0,100,0);
-            g.drawLine(0,-100,0,100);
+            setupVTM(g);
+            go.draw(g,parentOrigin, screenOrigin);
         }
 
         g.resetAffine();
@@ -42,13 +40,15 @@ public class MapView extends Container{
         gw.setDimension(new Dimension(this.getWidth(), this.getHeight()));
         if(counter == 0) {
             gw.init();
-            counter +=1;
+            counter += 1;
         }
     }
     public void update()
     {
-       repaint();
+        gw.updateLocalTransforms();
+        repaint();
     }
+
 
     private Transform buildWorldND(float winWidth, float winHeight, float winLeft, float winBottom)
     {
@@ -93,4 +93,5 @@ public class MapView extends Container{
         transform.translate(-getAbsoluteX(),-getAbsoluteY());
         g.setTransform(transform);
     }
+
 }

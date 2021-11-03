@@ -16,8 +16,8 @@ import static com.codename1.ui.CN.*;
 
 public class Fire extends Fixed implements Drawable {
     private static final ArrayList<Dimension> FIRE_SIZE = new ArrayList<>();
-    private static final ArrayList<Point2D> FIRE = new ArrayList<>();
     private static final ArrayList<Integer> RANDOM_NUM = new ArrayList<>();
+    private static final ArrayList<Transform> FIRES = new ArrayList<>();
     private int DISP_W,DISP_H;
 
     private final Random RND = new Random();
@@ -30,16 +30,20 @@ public class Fire extends Fixed implements Drawable {
 
         this.DISP_W = worldSize.getWidth();
         this.DISP_H = worldSize.getHeight();
-        getFire(fire.getLocation());
-
-        translate(DISP_W/2.0,DISP_H/2.0);
+        getFire(fire.myTranslation);
     }
 
     public Fire()
     {}
 
     @Override
-    public void localDraw(Graphics g, Point containerOrigin, Point screenOrigin) {
+    public void draw(Graphics g, Point containerOrigin, Point screenOrigin)
+    {
+        g.setTransform(flipGameObjectsAfterVTM(containerOrigin,screenOrigin));
+        localDraw(g,containerOrigin,screenOrigin);
+        g.resetAffine();
+    }
+    void localDraw(Graphics g, Point containerOrigin, Point screenOrigin) {
 
         Font f = Font.createSystemFont(FACE_SYSTEM, STYLE_PLAIN, SIZE_LARGE);
 
@@ -63,29 +67,30 @@ public class Fire extends Fixed implements Drawable {
         Point2D[] bounds = new Point2D[4];
 
         //top left point
-        bounds[0] = new Point2D(go.getLocationX() - 50,
+        bounds[0] = new Point2D(go.myTranslation.getTranslateX() - 50,
                                 go.getLocationY() - 50);
 
         //top right point
-        bounds[1] = new Point2D
-                        (go.getLocationX() + go.getDimensionsW() + 50,
-                                go.getLocationY() - 50);
+        bounds[1] = new Point2D(go.myTranslation.getTranslateX()
+                                        + go.getDimensionsW() + 50,
+                                go.myTranslation.getTranslateY() - 50);
 
         //bottom left
-        bounds[2] = new Point2D
-                        (  go.getLocationX() - 50,
-                                go.getLocationY() + go.getDimensionsW() + 50);
+        bounds[2] = new Point2D(go.myTranslation.getTranslateX() - 50,
+                                go.myTranslation.getTranslateY()
+                                        + go.getDimensionsW() + 50);
 
         //bottom right
-        bounds[3] = new Point2D
-                        (go.getLocationX() + go.getDimensionsW() + 50,
-                         go.getLocationY() + go.getDimensionsW() + 50);
+        bounds[3] = new Point2D(go.myTranslation.getTranslateX()
+                                        + go.getDimensionsW() + 50,
+                                go.myTranslation.getTranslateY()
+                                        + go.getDimensionsW() + 50);
         return bounds;
     }
 
     public void shrink(GameObject go, int water) {
 
-        int i = whichFireIsMapViewTryingToDraw(go.convertToPoint(go.getLocation()));
+        int i = whichFireIsMapViewTryingToDraw(go.myTranslation);
 
         FIRE_SIZE.get(i).setWidth(FIRE_SIZE.get(i).getWidth() - (water / 5));
 
@@ -118,13 +123,13 @@ public class Fire extends Fixed implements Drawable {
         return FIRE_SIZE;
     }
 
-    private int whichFireIsMapViewTryingToDraw(Point containerOrigin)
+    private int whichFireIsMapViewTryingToDraw(Transform fire)
     {
         int whichFire = 0;
         for(int i = 0; i<FIRE_SIZE.size();i++)
         {
-            if(containerOrigin.getX() == FIRE.get(i).getX()
-                    && containerOrigin.getY() == FIRE.get(i).getY())
+            if(fire.getTranslateX() == FIRES.get(i).getTranslateX() &&
+                fire.getTranslateY() == FIRES.get(i).getTranslateY())
             {
                 whichFire = i;
                 break;
@@ -133,18 +138,19 @@ public class Fire extends Fixed implements Drawable {
         return whichFire;
     }
 
-    private void getFire(Point2D loc) {
-        createLocalInstanceOfFires(loc);
+    private void getFire(Transform fire) {
+        createLocalInstanceOfFires(fire);
     }
 
-    private void createLocalInstanceOfFires(Point2D loc) {
+    private void createLocalInstanceOfFires(Transform fire) {
 
         int num = ((int) ((DISP_W * .005) + RND.nextInt(15)));
         RANDOM_NUM.add(changeRandomNumberIfItExistsInTheArray(num));
         int i = RANDOM_NUM.size() - 1;
 
-        FIRE_SIZE.add(new Dimension(RANDOM_NUM.get(i), RANDOM_NUM.get(i)));
-        FIRE.add(new Point2D(loc.getX(), loc.getY()));
+        setDimensions(new Dimension(RANDOM_NUM.get(i), RANDOM_NUM.get(i)));
+        FIRE_SIZE.add(new Dimension(getDimensionsW(),getDimensionsH()));
+        FIRES.add(fire);
     }
 
     private int changeRandomNumberIfItExistsInTheArray(int num)
@@ -159,7 +165,7 @@ public class Fire extends Fixed implements Drawable {
     private void createFires(Graphics g, Point containerOrigin)
     {
 
-        int whichFire = whichFireIsMapViewTryingToDraw(containerOrigin);
+        int whichFire = whichFireIsMapViewTryingToDraw(myTranslation);
         if(FIRE_SIZE.get(whichFire).getWidth() > 0) {
 
             drawFireLabel(g,containerOrigin,whichFire);
@@ -170,11 +176,11 @@ public class Fire extends Fixed implements Drawable {
 
     private void drawFire(Graphics g, Point containerOrigin, int whichFire)
     {
-        g.fillArc(    containerOrigin.getX(),
-                containerOrigin.getY(),
-                FIRE_SIZE.get(whichFire).getWidth(),
-                FIRE_SIZE.get(whichFire).getWidth(),
-                0, 360);
+        g.fillArc(  -FIRE_SIZE.get(whichFire).getWidth()/2,
+                    -FIRE_SIZE.get(whichFire).getWidth()/2,
+                    FIRE_SIZE.get(whichFire).getWidth(),
+                    FIRE_SIZE.get(whichFire).getWidth(),
+                    0, 360);
     }
     private void drawFireLabel(Graphics g, Point containerOrigin, int whichFire)
     {
@@ -182,8 +188,8 @@ public class Fire extends Fixed implements Drawable {
 
         label = String.valueOf(FIRE_SIZE.get(whichFire).getWidth());
         g.drawString(label,
-                containerOrigin.getX()+FIRE_SIZE.get(whichFire).getWidth(),
-                containerOrigin.getY()+FIRE_SIZE.get(whichFire).getWidth());
+                FIRE_SIZE.get(whichFire).getWidth(),
+                FIRE_SIZE.get(whichFire).getWidth());
 
     }
 }

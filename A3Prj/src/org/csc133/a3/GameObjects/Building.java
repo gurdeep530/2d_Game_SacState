@@ -20,12 +20,12 @@ public class Building extends Fixed implements Drawable {
     private final int DISP_H;
     private final int DISP_W;
     private final static int[] buildingDamage = new int[3];
-    private final static Point2D[] BUILDINGS_LOC = new Point2D[4];
     private final static Dimension[] BUILDING_DIM = new Dimension[4];
     private final static int[] BUILDING_VALUE = new int[4];
-    private final static int[] BUILDING_DAMAGE = new int[4];;
-
-
+    private final static int[] BUILDING_DAMAGE = new int[4];
+    private final static Transform BUILDING_ONE = Transform.makeIdentity();
+    private final static Transform BUILDING_TWO = Transform.makeIdentity();
+    private final static Transform BUILDING_THREE = Transform.makeIdentity();
     private final River r;
 
     public Building(int i, Dimension worldSize){
@@ -34,12 +34,16 @@ public class Building extends Fixed implements Drawable {
         setColor(ColorUtil.rgb(255,0,0));
         r = new River(worldSize);
         createBuildings(i);
-
-        translate(DISP_W/2.0,DISP_H/2.0);
     }
 
     @Override
-    public void localDraw(Graphics g, Point containerOrigin, Point originScreen) {
+    public void draw(Graphics g, Point containerOrigin, Point screenOrigin)
+    {
+        g.setTransform(flipGameObjectsAfterVTM(containerOrigin,screenOrigin));
+        localDraw(g,containerOrigin,screenOrigin);
+        g.resetAffine();
+    }
+   void localDraw(Graphics g, Point containerOrigin, Point originScreen) {
 
         String[] labels;
 
@@ -65,13 +69,13 @@ public class Building extends Fixed implements Drawable {
         Point2D[] bounds = getBuildingBounds(i);
 
         int xBound = (int) (RND.nextInt(
-                            (int)((bounds[1].getX() - 10) - bounds[0].getX()))
-                                + (bounds[0].getX() + 10));
-        int yBound = (int) (RND.nextInt(
-                            (int)((bounds[2].getY() - 10) - bounds[0].getY()))
-                                + (bounds[0].getY() - 10));
+                            (int)((bounds[1].getX()) - bounds[0].getX()))
+                                + (bounds[0].getX()));
+        int bound = (int) (bounds[0].getY() - bounds[2].getY());
+        int yBound = (int) (RND.nextInt(bound)
+                                + (bounds[2].getY()));
 
-         fire.setLocation(xBound,yBound);
+         fire.translate(xBound,yBound);
          return fire;
     }
 
@@ -109,24 +113,32 @@ public class Building extends Fixed implements Drawable {
         Point2D[] bounds = new Point2D[4];
 
         //top left
-        bounds[0] = new Point2D(BUILDINGS_LOC[whichBuilding].getX(),
-                                BUILDINGS_LOC[whichBuilding].getY());
+        bounds[0] = new Point2D(
+                getBuildingTransform(whichBuilding).getTranslateX()
+                                            - (getDimensionsW()/4.0),
+                getBuildingTransform(whichBuilding).getTranslateY()
+                                            + (getDimensionsH()/4.0));
 
         //top right
-        bounds[1] = new Point2D(BUILDINGS_LOC[whichBuilding].getX()
-                                + BUILDING_DIM[whichBuilding].getWidth(),
-                                BUILDINGS_LOC[whichBuilding].getY());
+        bounds[1] = new Point2D(
+                getBuildingTransform(whichBuilding).getTranslateX()
+                                            + (getDimensionsW()/4.0),
+                getBuildingTransform(whichBuilding).getTranslateY()
+                                            + (getDimensionsH()/4.0));
 
         //bottom left
-        bounds[2] = new Point2D(BUILDINGS_LOC[whichBuilding].getX(),
-                             BUILDINGS_LOC[whichBuilding].getY()
-                                + BUILDING_DIM[whichBuilding].getHeight());
+        bounds[2] = new Point2D(
+                getBuildingTransform(whichBuilding).getTranslateX()
+                                            - (getDimensionsW()/4.0),
+                getBuildingTransform(whichBuilding).getTranslateY()
+                                            - (getDimensionsH()/4.0));
 
         //bottom right
-        bounds[3] = new Point2D(BUILDINGS_LOC[whichBuilding].getX()
-                                + BUILDING_DIM[whichBuilding].getWidth(),
-                                BUILDINGS_LOC[whichBuilding].getY()
-                                + BUILDING_DIM[whichBuilding].getHeight());
+        bounds[3] = new Point2D(
+                getBuildingTransform(whichBuilding).getTranslateX()
+                                            + (getDimensionsW()/4.0),
+                getBuildingTransform(whichBuilding).getTranslateY()
+                                            - (getDimensionsH()/4.0));
 
         return bounds;
     }
@@ -144,6 +156,19 @@ public class Building extends Fixed implements Drawable {
 
     }
 
+    private Transform getBuildingTransform(int whichBuilding)
+    {
+        Transform transform = Transform.makeIdentity();
+
+        if(whichBuilding == 1)
+            transform = BUILDING_ONE;
+        else if(whichBuilding == 2)
+            transform = BUILDING_TWO;
+        else if(whichBuilding == 3)
+            transform = BUILDING_THREE;
+
+        return transform;
+    }
     private int whichBuildingIsMapViewTryingToDraw()
     {
         int whichBuilding = 0;
@@ -153,6 +178,9 @@ public class Building extends Fixed implements Drawable {
                     && getDimensionsH() == BUILDING_DIM[i].getHeight())
             {
                 whichBuilding = i;
+                getBuildingTransform(whichBuilding).setTranslation
+                        (       myTranslation.getTranslateX(),
+                                myTranslation.getTranslateY());
             }
         }
         return whichBuilding;
@@ -160,36 +188,33 @@ public class Building extends Fixed implements Drawable {
 
     private void createTheBuildingAboveRiver()
     {
-        Point2D riverLoc = r.RiverLocation();
         int RANDOM_NUM = (RND.nextInt(700 - 300) + 300);
 
-        setLocation(riverLoc.getX() + (DISP_W * .1),
-                riverLoc.getY() - (DISP_H / 6.0));
         setDimensions((DISP_W - RANDOM_NUM), ((int) ((DISP_H * .2) / 2)));
 
-        BUILDINGS_LOC[1] = new Point2D(-getDimensionsW()/2.0, -getDimensionsH()/2.0);
         BUILDING_DIM[1] = new Dimension(getDimensionsW(),getDimensionsH());
-
         RANDOM_NUM = RND.nextInt(1000 - 100) +100;
         BUILDING_VALUE[1] = RANDOM_NUM;
 
-        translate(0, riverLoc.getY() - 40);
+        translate(DISP_W/4.0, DISP_H*.1);
+        BUILDING_ONE.setTranslation(myTranslation.getTranslateX(),
+                                    myTranslation.getTranslateY());
     }
 
     private void createTheBuildingOnLeft()
     {
         int RANDOM_NUM = (RND.nextInt(4 - 2) +2 );
 
-        setLocation(0 + (DISP_W * .1), DISP_H /2.0);
         setDimensions((int) (DISP_W / 8.0), ((DISP_H) / RANDOM_NUM));
 
-        BUILDINGS_LOC[2] =  new Point2D(getLocationX(), getLocationY());
         BUILDING_DIM[2] = new Dimension(getDimensionsW(),getDimensionsH());
 
         RANDOM_NUM = RND.nextInt(1000 - 100) +100;
         BUILDING_VALUE[2] = RANDOM_NUM;
 
-        translate((DISP_W/-3.0),200);
+        translate(DISP_W/10.0,DISP_H/3.0);
+        BUILDING_TWO.setTranslation(myTranslation.getTranslateX(),
+                myTranslation.getTranslateY());
     }
 
     private void createTheBuildingOnRight()
@@ -198,23 +223,19 @@ public class Building extends Fixed implements Drawable {
 
         setDimensions((int) (DISP_W / 8.0), getUniqueRandomNum());
 
-        BUILDINGS_LOC[3] =  new Point2D(DISP_W/3.0,200);
         BUILDING_DIM[3] = new Dimension(getDimensionsW(),getDimensionsH());
 
         int RANDOM_NUM = RND.nextInt(1000 - 100) +100;
         BUILDING_VALUE[3] = RANDOM_NUM;
 
-        translate(DISP_W/3.0,200);
+        translate(DISP_W/2.5,DISP_H/3.0);
+        BUILDING_THREE.setTranslation(myTranslation.getTranslateX(),
+                myTranslation.getTranslateY());
     }
 
     private Boolean isBuildingDimTheSame()
     {
-        Boolean check = false;
-        if(BUILDING_DIM[3].getHeight() == BUILDING_DIM[2].getHeight())
-        {
-            check = true;
-        }
-        return check;
+        return getDimensionsH() == BUILDING_DIM[2].getHeight();
     }
 
     private int getUniqueRandomNum()
@@ -224,6 +245,7 @@ public class Building extends Fixed implements Drawable {
         while(isBuildingDimTheSame())
         {
             RANDOM_NUM = (RND.nextInt(4 - 2) +2 );
+            height = ((DISP_H) / RANDOM_NUM);
         }
         return height;
     }
@@ -257,8 +279,6 @@ public class Building extends Fixed implements Drawable {
                     -getDimensionsH()/2,
                     getDimensionsW(),
                     getDimensionsH(),5);
-        g.drawLine(-getDimensionsW()/2,0,getDimensionsW()/2,0);
-        g.drawLine(0,-getDimensionsH()/2,0,getDimensionsH()/2);
     }
 
     private void drawBuildingLabels(Graphics g, Point containerOrigin, String[] labels)

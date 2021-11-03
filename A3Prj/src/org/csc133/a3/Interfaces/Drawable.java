@@ -5,5 +5,5 @@ import com.codename1.ui.geom.Point;
 
 public interface Drawable {
 
-    void localDraw(Graphics g, Point containerOrigin, Point originScreen);
+    void draw(Graphics g, Point containerOrigin, Point originScreen);
 }

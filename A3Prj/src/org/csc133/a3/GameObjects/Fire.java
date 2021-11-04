@@ -18,18 +18,16 @@ public class Fire extends Fixed implements Drawable {
     private static final ArrayList<Dimension> FIRE_SIZE = new ArrayList<>();
     private static final ArrayList<Integer> RANDOM_NUM = new ArrayList<>();
     private static final ArrayList<Transform> FIRES = new ArrayList<>();
-    private int DISP_W,DISP_H;
+    private int DISP_W;
 
     private final Random RND = new Random();
 
     public Fire(Fire fire, Dimension worldSize)
     {
-        setLocation(new Point2D(0,0));
         setDimensions(new Dimension(0,0));
         setColor(ColorUtil.MAGENTA);
 
         this.DISP_W = worldSize.getWidth();
-        this.DISP_H = worldSize.getHeight();
         getFire(fire.myTranslation);
     }
 
@@ -39,7 +37,6 @@ public class Fire extends Fixed implements Drawable {
     @Override
     public void draw(Graphics g, Point containerOrigin, Point screenOrigin)
     {
-        g.setTransform(flipGameObjectsAfterVTM(containerOrigin,screenOrigin));
         localDraw(g,containerOrigin,screenOrigin);
         g.resetAffine();
     }
@@ -54,7 +51,7 @@ public class Fire extends Fixed implements Drawable {
         localTransform(gFireForm);
         postLTTransform(g, screenOrigin,gFireForm);
 
-        createFires(g,containerOrigin);
+        createFires(g);
 
         resetTranformToOrginal(g);
 
@@ -68,7 +65,7 @@ public class Fire extends Fixed implements Drawable {
 
         //top left point
         bounds[0] = new Point2D(go.myTranslation.getTranslateX() - 50,
-                                go.getLocationY() - 50);
+                                go.myTranslation.getTranslateY() - 50);
 
         //top right point
         bounds[1] = new Point2D(go.myTranslation.getTranslateX()
@@ -128,8 +125,9 @@ public class Fire extends Fixed implements Drawable {
         int whichFire = 0;
         for(int i = 0; i<FIRE_SIZE.size();i++)
         {
-            if(fire.getTranslateX() == FIRES.get(i).getTranslateX() &&
-                fire.getTranslateY() == FIRES.get(i).getTranslateY())
+            if(FIRE_SIZE.get(i).getWidth() > 0 &&
+                    fire.getTranslateX() == FIRES.get(i).getTranslateX() &&
+                    fire.getTranslateY() == FIRES.get(i).getTranslateY())
             {
                 whichFire = i;
                 break;
@@ -162,27 +160,28 @@ public class Fire extends Fixed implements Drawable {
         return num;
     }
 
-    private void createFires(Graphics g, Point containerOrigin)
+    private void createFires(Graphics g)
     {
 
         int whichFire = whichFireIsMapViewTryingToDraw(myTranslation);
         if(FIRE_SIZE.get(whichFire).getWidth() > 0) {
 
-            drawFireLabel(g,containerOrigin,whichFire);
+            drawFireLabel(g,whichFire);
 
-            drawFire(g, containerOrigin, whichFire);
+            drawFire(g, whichFire);
         }
     }
 
-    private void drawFire(Graphics g, Point containerOrigin, int whichFire)
+    private void drawFire(Graphics g, int whichFire)
     {
         g.fillArc(  -FIRE_SIZE.get(whichFire).getWidth()/2,
                     -FIRE_SIZE.get(whichFire).getWidth()/2,
                     FIRE_SIZE.get(whichFire).getWidth(),
                     FIRE_SIZE.get(whichFire).getWidth(),
                     0, 360);
+
     }
-    private void drawFireLabel(Graphics g, Point containerOrigin, int whichFire)
+    private void drawFireLabel(Graphics g, int whichFire)
     {
         String label;
 

@@ -20,13 +20,12 @@ public class River extends Fixed implements Drawable {
         setColor(ColorUtil.BLUE);
         setDimensions(RiverDimension());
 
-        translate(DISP_W/4.0,DISP_H/6.0);
+        translate(DISP_W/2.0,DISP_H * .33);
     }
 
     @Override
     public void draw(Graphics g, Point containerOrigin, Point screenOrigin)
     {
-        g.setTransform(flipGameObjectsAfterVTM(containerOrigin,screenOrigin));
         localDraw(g,containerOrigin,screenOrigin);
         g.resetAffine();
     }
@@ -48,25 +47,43 @@ public class River extends Fixed implements Drawable {
         g.resetAffine();
     }
 
-    Point2D RiverLocation() {
-        return new Point2D(DISP_W/2.0, ((int) (DISP_H * .30)));
-    }
     private Dimension RiverDimension()
     {
         setDimensions((DISP_W ),((int) ((DISP_H * .2) / 2)));
         return getDimension();
     }
 
-    //bounds of the riverDimension
     Point2D[] getRiverBounds() {
         //point 1 is top left, 2 is bottom right
-        Point2D[] bounds = new Point2D[2];
+        Point2D[] bounds = new Point2D[4];
 
-        bounds[0] = new Point2D((int)getLocationX(),
-                              (int)getLocationY());
+        //top left
+        bounds[0] = new Point2D(
+                myTranslation.getTranslateX()
+                        - (getDimensionsW()/2.0),
+                myTranslation.getTranslateY()
+                        + (getDimensionsH()/2.0));
+
+        //top right
         bounds[1] = new Point2D(
-                (int)getLocationX() + getDimensionsW(),
-                (int)getLocationY()+ getDimensionsH());
+                myTranslation.getTranslateX()
+                        + (getDimensionsW()/2.0),
+                myTranslation.getTranslateY()
+                        + (getDimensionsH()/2.0));
+
+        //bottom left
+        bounds[2] = new Point2D(
+                myTranslation.getTranslateX()
+                        - (getDimensionsW()/2.0),
+                myTranslation.getTranslateY()
+                        - (getDimensionsH()/2.0));
+
+        //bottom right
+        bounds[3] = new Point2D(
+                myTranslation.getTranslateX()
+                        + (getDimensionsW()/2.0),
+                myTranslation.getTranslateY()
+                        - (getDimensionsH()/2.0));
 
         return bounds;
     }

@@ -19,7 +19,7 @@ public class HeliPad extends Fixed implements Drawable {
         this.DISP_W = worldSize.getWidth();
         setColor(ColorUtil.LTGRAY);
 
-        translate(DISP_W/4.0, DISP_H/2.15);
+        translate(DISP_W/2.0, (DISP_H - (DISP_H * .75)));
 
     }
 
@@ -27,7 +27,6 @@ public class HeliPad extends Fixed implements Drawable {
     @Override
     public void draw(Graphics g, Point containerOrigin, Point screenOrigin)
     {
-        g.setTransform(flipGameObjectsAfterVTM(containerOrigin,screenOrigin));
         localDraw(g,containerOrigin,screenOrigin);
         g.resetAffine();
     }
@@ -42,38 +41,22 @@ public class HeliPad extends Fixed implements Drawable {
         localTransform(gHeliPadForm);
         postLTTransform(g, originScreen,gHeliPadForm);
 
-        drawHeliPadSquare(g,containerOrigin);
+        drawHeliPadSquare(g);
 
         setDimensions(HeliPadCircleDimension());
 
-        drawHeliPadCircle(g, containerOrigin);
+        drawHeliPadCircle(g);
 
         resetTranformToOrginal(g);
 
         g.resetAffine();
     }
 
-    Point2D HeliPadSquareLocation() {
-        setDimensions(HeliPadSquareDimension());
-        setLocation
-                ((DISP_W / 2.0) - (getDimensionsW() / 2.0),
-                        DISP_H * .9);
-
-        return getLocation();
-    }
 
     Dimension HeliPadSquareDimension(){
         return new Dimension(
                             ((int)((DISP_H * .25) / 2)),
                             ((int)((DISP_H * .25) / 2)));
-    }
-
-    Point2D HeliPadCircleLocation() {
-        setDimensions(HeliPadCircleDimension());
-
-        return new Point2D(
-                    ((DISP_W / 2.0) - (getDimensionsW() / 2.0)),
-                    (int)(DISP_H - (getDimensionsH() * .9)));
     }
 
     Dimension HeliPadCircleDimension(){
@@ -82,7 +65,16 @@ public class HeliPad extends Fixed implements Drawable {
                     (int)(DISP_H * .18) / 2);
     }
 
+    Point2D HeliPadCircleLocation() {
+        setDimensions(HeliPadCircleDimension());
+
+        return new Point2D(
+                ((DISP_W / 2.0) - (getDimensionsW() / 2.0)),
+                (int)(DISP_H - (getDimensionsH() * .9)));
+    }
+
     Point2D[] CircleBounds() {
+
         Point2D circleLocation = HeliPadCircleLocation();
         Dimension size = HeliPadCircleDimension();
         Point2D[] bounds = new Point2D[4];
@@ -91,34 +83,31 @@ public class HeliPad extends Fixed implements Drawable {
         bounds[0] = circleLocation;
         //upper right corner
         bounds[1] = new Point2D(circleLocation.getX() + size.getWidth(),
-                                circleLocation.getY());
+                circleLocation.getY());
         //lower left corner
         bounds[2] = new Point2D(circleLocation.getX(),
-                             circleLocation.getY() + size.getWidth());
+                circleLocation.getY() + size.getWidth());
         //lower right corner
         bounds[3] = new Point2D(circleLocation.getX() + size.getWidth(),
-                                circleLocation.getY() + size.getWidth());
+                circleLocation.getY() + size.getWidth());
 
         return bounds;
     }
 
 
-    private void drawHeliPadSquare(Graphics g, Point containerOrigin)
+    private void drawHeliPadSquare(Graphics g)
     {
-        containerOrigin = new Point(-getDimensionsW()/2,-getDimensionsW()/2);
-
-        g.drawRect( containerOrigin.getX(),
-                    containerOrigin.getY(),
+        g.drawRect( -getDimensionsW()/2,
+                    -getDimensionsW()/2,
                     getDimensionsW(),
                     getDimensionsH(),
                     5);
     }
 
-    private void drawHeliPadCircle(Graphics g, Point containerOrigin)
+    private void drawHeliPadCircle(Graphics g)
     {
-        containerOrigin = new Point(-getDimensionsW()/2,-getDimensionsW()/2);
-        g.drawArc(  containerOrigin.getX(),
-                    containerOrigin.getY(),
+        g.drawArc(  -getDimensionsW()/2,
+                    -getDimensionsW()/2,
                     getDimensionsW(),
                     getDimensionsH(),
                 0, 360);

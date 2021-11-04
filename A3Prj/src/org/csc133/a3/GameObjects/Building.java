@@ -39,7 +39,6 @@ public class Building extends Fixed implements Drawable {
     @Override
     public void draw(Graphics g, Point containerOrigin, Point screenOrigin)
     {
-        g.setTransform(flipGameObjectsAfterVTM(containerOrigin,screenOrigin));
         localDraw(g,containerOrigin,screenOrigin);
         g.resetAffine();
     }
@@ -115,30 +114,30 @@ public class Building extends Fixed implements Drawable {
         //top left
         bounds[0] = new Point2D(
                 getBuildingTransform(whichBuilding).getTranslateX()
-                                            - (getDimensionsW()/4.0),
+                                            - (getDimensionsW()/2.0),
                 getBuildingTransform(whichBuilding).getTranslateY()
-                                            + (getDimensionsH()/4.0));
+                                            + (getDimensionsH()/2.0));
 
         //top right
         bounds[1] = new Point2D(
                 getBuildingTransform(whichBuilding).getTranslateX()
-                                            + (getDimensionsW()/4.0),
+                                            + (getDimensionsW()/2.0),
                 getBuildingTransform(whichBuilding).getTranslateY()
-                                            + (getDimensionsH()/4.0));
+                                            + (getDimensionsH()/2.0));
 
         //bottom left
         bounds[2] = new Point2D(
                 getBuildingTransform(whichBuilding).getTranslateX()
-                                            - (getDimensionsW()/4.0),
+                                            - (getDimensionsW()/2.0),
                 getBuildingTransform(whichBuilding).getTranslateY()
-                                            - (getDimensionsH()/4.0));
+                                            - (getDimensionsH()/2.0));
 
         //bottom right
         bounds[3] = new Point2D(
                 getBuildingTransform(whichBuilding).getTranslateX()
-                                            + (getDimensionsW()/4.0),
+                                            + (getDimensionsW()/2.0),
                 getBuildingTransform(whichBuilding).getTranslateY()
-                                            - (getDimensionsH()/4.0));
+                                            - (getDimensionsH()/2.0));
 
         return bounds;
     }
@@ -196,7 +195,7 @@ public class Building extends Fixed implements Drawable {
         RANDOM_NUM = RND.nextInt(1000 - 100) +100;
         BUILDING_VALUE[1] = RANDOM_NUM;
 
-        translate(DISP_W/4.0, DISP_H*.1);
+        translate(DISP_W/2.0, DISP_H*.20);
         BUILDING_ONE.setTranslation(myTranslation.getTranslateX(),
                                     myTranslation.getTranslateY());
     }
@@ -212,15 +211,13 @@ public class Building extends Fixed implements Drawable {
         RANDOM_NUM = RND.nextInt(1000 - 100) +100;
         BUILDING_VALUE[2] = RANDOM_NUM;
 
-        translate(DISP_W/10.0,DISP_H/3.0);
+        translate(DISP_W * .2,DISP_H/1.5);
         BUILDING_TWO.setTranslation(myTranslation.getTranslateX(),
                 myTranslation.getTranslateY());
     }
 
     private void createTheBuildingOnRight()
     {
-        setLocation(DISP_W - (DISP_W * .2), DISP_H /2.0);
-
         setDimensions((int) (DISP_W / 8.0), getUniqueRandomNum());
 
         BUILDING_DIM[3] = new Dimension(getDimensionsW(),getDimensionsH());
@@ -228,7 +225,7 @@ public class Building extends Fixed implements Drawable {
         int RANDOM_NUM = RND.nextInt(1000 - 100) +100;
         BUILDING_VALUE[3] = RANDOM_NUM;
 
-        translate(DISP_W/2.5,DISP_H/3.0);
+        translate(DISP_W - (DISP_W *.2),DISP_H/1.5);
         BUILDING_THREE.setTranslation(myTranslation.getTranslateX(),
                 myTranslation.getTranslateY());
     }
@@ -279,6 +276,7 @@ public class Building extends Fixed implements Drawable {
                     -getDimensionsH()/2,
                     getDimensionsW(),
                     getDimensionsH(),5);
+
     }
 
     private void drawBuildingLabels(Graphics g, Point containerOrigin, String[] labels)

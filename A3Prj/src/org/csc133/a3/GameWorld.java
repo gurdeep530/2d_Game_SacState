@@ -2,7 +2,6 @@ package org.csc133.a3;
 
 import com.codename1.ui.*;
 import com.codename1.ui.geom.Dimension;
-import com.codename1.ui.geom.Point2D;
 import com.codename1.ui.layouts.BorderLayout;
 import org.csc133.a3.GameObjects.*;
 
@@ -11,12 +10,12 @@ import java.util.ArrayList;
 public class GameWorld {
     private Dimension worldSize;
     private int ticker;
-    private static final Point2D HELI_LOC_CHANGE = new Point2D(0,0);
     private Fire f;
     private Helicopter h;
     private Building b;
     private static int water;
     private static int HELI_FUEL;
+    private int elapsedTime = 0;
     private final ArrayList<GameObject> GAME_OBJECTS = new ArrayList<>();
 
 
@@ -31,6 +30,7 @@ public class GameWorld {
 
         h = new Helicopter(worldSize);
         f = new Fire();
+
 
         GAME_OBJECTS.add(new HeliPad(worldSize));
         GAME_OBJECTS.add(new River(worldSize));
@@ -53,22 +53,22 @@ public class GameWorld {
 
     public void tick() {
         if (HELI_FUEL > 0) {
+
             HELI_FUEL -= Math.pow(h.Speed(), 2);
             if(HELI_FUEL < 0)
                 HELI_FUEL = 0;
             h.setLabels(HELI_FUEL, water);
 
-            HELI_LOC_CHANGE.setX(h.newPositions()[0]);
-            HELI_LOC_CHANGE.setY(h.newPositions()[1]);
+            h.setHeliLocation();
 
-            GAME_OBJECTS.set(GAME_OBJECTS.size()-1,
-                            new Helicopter(worldSize));
+            GAME_OBJECTS.set(GAME_OBJECTS.size()-1,new Helicopter(worldSize));
 
             ticker++;
 
             if ((ticker == 30)) {
                 ticker = 0;
                 int i = 0;
+
                 for(GameObject go: getGameObjectCollection()) {
                     if (go instanceof Fire) {
                         f.grow(i);
@@ -76,9 +76,7 @@ public class GameWorld {
                     }
                 }
                 b.buildingDamages(f.FireSizes());
-
             }
-
         }
         if (HELI_FUEL <= 0) {
             getFuelLosingMenu();
@@ -87,7 +85,7 @@ public class GameWorld {
         {
             getDamageLosingMenu();
         }
-        else if (f.areFiresOut() && h.CanHeliLand(HELI_LOC_CHANGE))
+        else if (f.areFiresOut() && h.CanHeliLand())
         {
             getWinningMenu();
         }
@@ -96,7 +94,7 @@ public class GameWorld {
     public void Drink() {
         if (h.Speed() < 2
                 && water != 1000
-                && h.IsHeliOverRiver(HELI_LOC_CHANGE))
+                && h.IsHeliOverRiver())
         {
             water += 100;
         }
@@ -106,7 +104,7 @@ public class GameWorld {
         int i = 0;
         for(GameObject go: getGameObjectCollection()) {
             if(go instanceof Fire) {
-                if (h.IsHeliOverFire(HELI_LOC_CHANGE, f.getFireBounds(go))) {
+                if (h.IsHeliOverFire(f.getFireBounds(go))) {
                     f.shrink(go, water);
                     break;
                 }
@@ -220,7 +218,7 @@ public class GameWorld {
     }
     public int getHeadingForGlassCockpit()
     {
-        return h.Heading() + 90;
+        return h.Heading();
     }
     public int getFuelGlassCockpit()
     {

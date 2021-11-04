@@ -1,5 +1,6 @@
 package org.csc133.a3.GameObjects;
 import com.codename1.charts.util.ColorUtil;
+import com.codename1.ui.Font;
 import com.codename1.ui.Graphics;
 import com.codename1.ui.Transform;
 import com.codename1.ui.geom.Dimension;
@@ -11,21 +12,20 @@ import org.csc133.a3.Interfaces.Steerable;
 import javax.swing.tree.FixedHeightLayoutCache;
 import java.util.ArrayList;
 
+import static com.codename1.ui.CN.*;
+
 public class Helicopter extends Movable implements Steerable, Drawable {
 
-    private final boolean IS_MOVING = false;
-    private int baseSize, labelSpacing;
-    private static Point2D bottomNoseLocation, baseLocation,
-            labelLocation, topNoseLocation = new Point2D(0, 0);
     private static final String[] HELI_LABELS = new String[2];
     private final HeliPad hp;
     private final River r;
     public int MAX_SPEED = 10;
     private final int DISP_H;
     private final int DISP_W;
-    private final ArrayList<GameObject> heliParts;
+    private ArrayList<GameObject> heliParts;
     private HeliBlade heliBlade;
     private static double heliBladeRotation;
+    private static int HELI_TRANS_X, HELI_TRANS_Y;
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     private static final int BUBBLE_RADIUS = 125;
@@ -153,7 +153,6 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         }
 
     }
-
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     private static class HeliSkids extends GameObject {
         private static final int SKID_WIDTH = 20;
@@ -203,22 +202,9 @@ public class Helicopter extends Movable implements Steerable, Drawable {
 
         public void localDraw(Graphics g, Point parentOrigin,
                               Point originScreen) {
-            Transform gxForm = Transform.makeIdentity();
-            localTransform(gxForm);
-            g.getTransform(gxForm);
-            gxForm.translate(-getDimensionsW() / 2f,
-                    -getDimensionsH() / 2f);
-            gxForm.translate(-parentOrigin.getX(), -parentOrigin.getY());
-            gxForm.translate(originScreen.getX(), originScreen.getY());
 
-            gxForm.translate(myTranslation.getTranslateX(),
-                                myTranslation.getTranslateY());
-            gxForm.concatenate(myRotation);
-            gxForm.scale(myScale.getScaleX(), myScale.getScaleY());
+            transformsToMakeBladeRotate(g,parentOrigin,originScreen);
 
-            gxForm.translate(-originScreen.getX(), -originScreen.getY());
-            gxForm.translate(parentOrigin.getX(), parentOrigin.getY());
-            g.setTransform(gxForm);
             drawBlade(g);
             drawBladeConnector(g);
         }
@@ -239,6 +225,26 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         public void updateLocalTransform(double rotationSpeed) {
             heliBladeRotation += rotationSpeed;
         }
+        private void transformsToMakeBladeRotate(Graphics g,
+                                                 Point parentOrigin,
+                                                 Point originScreen) {
+            Transform gxForm = Transform.makeIdentity();
+            localTransform(gxForm);
+            g.getTransform(gxForm);
+            gxForm.translate(-getDimensionsW() / 2f,
+                    -getDimensionsH() / 2f);
+            gxForm.translate(-parentOrigin.getX(), -parentOrigin.getY());
+            gxForm.translate(originScreen.getX(), originScreen.getY());
+
+            gxForm.translate(   myTranslation.getTranslateX(),
+                                myTranslation.getTranslateY());
+            gxForm.concatenate(myRotation);
+            gxForm.scale(myScale.getScaleX(), myScale.getScaleY());
+
+            gxForm.translate(-originScreen.getX(), -originScreen.getY());
+            gxForm.translate(parentOrigin.getX(), parentOrigin.getY());
+            g.setTransform(gxForm);
+        }
     }
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -247,10 +253,15 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         r = new River(worldSize);
         DISP_W = worldSize.getWidth();
         DISP_H = worldSize.getHeight();
-        translate(DISP_W / 2.0,
 
-                DISP_H - (DISP_H - (DISP_H * .9)));
-        scale(.25f, .25f);
+        setUpHelicopter();
+        addAllHeliParts();
+
+        setColor(ColorUtil.YELLOW);
+    }
+
+    private void addAllHeliParts()
+    {
         heliParts = new ArrayList<>();
         heliParts.add(new HeliBubble());
         heliParts.add(new HeliEngineBlock());
@@ -259,19 +270,28 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         heliParts.add(new HeliSkids());
         heliBlade = new HeliBlade();
         heliParts.add(heliBlade);
-
-        setColor(ColorUtil.YELLOW);
     }
 
-
+    private void setUpHelicopter()
+    {
+        setHeliLocation();
+        translate( HELI_TRANS_X , HELI_TRANS_Y);
+        scale(.25f, .25f);
+        rotate(-Heading());
+    }
     @Override
-    public void draw(Graphics g, Point containerOrigin, Point originScreen) {
+    public void draw(Graphics g, Point containerOrigin,
+                         Point originScreen) {
         g.setColor(color);
-        g.setTransform(flipGameObjectsAfterVTM(containerOrigin, originScreen));
+
+        g.setTransform(flipGameObjectsAfterVTM( containerOrigin, originScreen));
 
         for (GameObject go : heliParts) {
+
             go.localDraw(g, containerOrigin, originScreen);
         }
+
+        drawFuelAndWaterLabels(g);
         g.resetAffine();
     }
 
@@ -281,56 +301,52 @@ public class Helicopter extends Movable implements Steerable, Drawable {
 
     @Override
     public void steerLeft() {
-        ChangeDirection(-15);
-        this.rotate(-15);
+        ChangeDirection(15);
     }
 
     @Override
     public void steerRight() {
-        ChangeDirection(15);
-        this.rotate(15);
+        ChangeDirection(-15);
     }
 
-    public int[] newPositions() {
-        return Move();
+    public void setHeliLocation() {
+
+        HELI_TRANS_X = (int) (DISP_W / 2.0) -Move()[1];
+        HELI_TRANS_Y = (int) (DISP_H - (DISP_H - (DISP_H * .9)))
+                                - Move()[0];
     }
 
     //Checks for if heli is over the River and fire.
     //I put them in the Heli class because the heli is
     //performing the action on the riverDimension/fire so the heli needs
     //to know if it is over them
-    public boolean IsHeliOverRiver(Point2D heliLocChange) {
-        Point2D heliBaseCoords;
+    public boolean IsHeliOverRiver() {
         Point2D[] riverBounds;
-        heliBaseCoords = setBaseLocation(heliLocChange);
         riverBounds = r.getRiverBounds();
 
-        return ((heliBaseCoords.getY() >= riverBounds[0].getY())
-                && (heliBaseCoords.getY() <= riverBounds[1].getY()));
+        return ((HELI_TRANS_Y <= riverBounds[0].getY())
+                && (HELI_TRANS_Y >= riverBounds[2].getY()));
     }
 
-    public boolean IsHeliOverFire(Point2D heliLocChange, Point2D[] bounds) {
-        Point2D heliBaseCoords;
+    public boolean IsHeliOverFire(Point2D[] bounds) {
         Point2D[] fireBounds;
-        heliBaseCoords = setBaseLocation(heliLocChange);
         fireBounds = bounds;
 
-        return ((fireBounds[0].getX() <= heliBaseCoords.getX())
-                && (fireBounds[1].getY() <= heliBaseCoords.getY())
-                && (fireBounds[1].getX() >= heliBaseCoords.getX())
-                && ((heliBaseCoords.getY() <= fireBounds[2].getY())));
+        return ((fireBounds[0].getX() <= HELI_TRANS_X)
+                && (fireBounds[1].getY() <= HELI_TRANS_Y)
+                && (fireBounds[1].getX() >= HELI_TRANS_X)
+                && ((fireBounds[2].getY() >= HELI_TRANS_Y)));
 
     }
 
-    public boolean CanHeliLand(Point2D heliLocChange) {
+    public boolean CanHeliLand() {
         Point2D[] circleBounds = hp.CircleBounds();
-        Point2D heliBaseCoords = setBaseLocation(heliLocChange);
 
         return Speed() == 0
-                && circleBounds[0].getX() <= heliBaseCoords.getX()
-                && circleBounds[1].getY() <= heliBaseCoords.getY()
-                && circleBounds[1].getX() >= heliBaseCoords.getX()
-                && circleBounds[2].getY() >= heliBaseCoords.getY();
+                && circleBounds[0].getX() <= HELI_TRANS_X
+                && circleBounds[1].getY() <= HELI_TRANS_Y
+                && circleBounds[1].getX() >= HELI_TRANS_X
+                && circleBounds[2].getY() >= HELI_TRANS_Y;
     }
 
     public void setLabels(int fuel, int water) {
@@ -338,47 +354,20 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         HELI_LABELS[1] = ("W: " + water);
     }
 
-    //I made these initial functions so that we
-    //wouldn't have to do the math over and over
-    //if we needed it somewhere else
-    //initial placement of the HeliNoseLocation
-    private int[] HeliBase() {
-        Point2D location = hp.HeliPadCircleLocation();
-        Dimension dimension = hp.HeliPadCircleDimension();
-        int[] coords = new int[3];
+    private void drawFuelAndWaterLabels(Graphics g) {
 
-        location.setX((int) (location.getX() + (dimension.getWidth() / 2.7)));
-        location.setY((int) (location.getY() + (dimension.getWidth() / 2)));
-        baseSize = (int) (dimension.getWidth() / 3.5);
+        Font f = Font.createSystemFont(FACE_SYSTEM, STYLE_PLAIN, SIZE_SMALL);
+        g.setFont(f);
+        g.setColor(ColorUtil.YELLOW);
+        Transform labelForm = Transform.makeIdentity();
+        labelForm.setTranslation(   (int)myTranslation.getTranslateX(),
+                                 (int)myTranslation.getTranslateY() + 150);
 
-        baseLocation = location;
+        g.setTransform(labelForm);
 
-        coords[0] = (int) location.getX();
-        coords[1] = (int) location.getY();
-        coords[2] = baseSize;
+        g.drawString(HELI_LABELS[0],0, 0);
+        g.drawString(HELI_LABELS[1],0, 30);
 
-        return coords;
-    }
-
-
-    private Point2D HeliLabelLocation() {
-        int[] coords = new int[3];
-        coords[0] = (int) hp.HeliPadSquareLocation().getX();
-        coords[1] = (int) hp.HeliPadSquareLocation().getY();
-        coords[2] = hp.HeliPadSquareDimension().getWidth();
-
-        coords[0] += coords[2] / 2;
-        coords[1] += coords[2];
-        labelSpacing = (int) (coords[2] * .25);
-
-        return new Point2D(coords[0], coords[1]);
-    }
-
-    private Point2D setBaseLocation(Point2D location) {
-        HeliBase();
-        baseLocation.setX(baseLocation.getX() + location.getX());
-        baseLocation.setY(baseLocation.getY() + location.getY());
-        return baseLocation;
     }
 
     private float rotationalSpeed() {

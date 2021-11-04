@@ -29,42 +29,11 @@ public class GameObject implements Drawable {
     {
         this.color = color;
     }
-    public double getLocationX()
-    {
-        return location.getX();
-    }
-
-    public double getLocationY()
-    {
-        return location.getY();
-    }
-
-    public Point2D getLocation()
-    {
-        return location;
-    }
-
-    public Point convertToPoint(Point2D point)
-    {
-        return new Point((int) point.getX(),(int)point.getY());
-    }
-
-    public void setLocation(double x, double y)
-    {
-        location.setX(x);
-        location.setY(y);
-    }
-
-    public void setLocation(Point2D newLoc)
-    {
-        location.setX(newLoc.getX());
-        location.setY(newLoc.getY());
-
-    }
 
     public Dimension getDimension(){
         return dimension;
     }
+
     public int getDimensionsW() {
         return dimension.getWidth();
     }
@@ -83,7 +52,7 @@ public class GameObject implements Drawable {
     }
 
     @Override
-    public void draw(Graphics g, Point containerOrigin, Point originScreeen)
+    public void draw(Graphics g, Point containerOrigin, Point originScreen)
     {
 
     }
@@ -128,7 +97,8 @@ public class GameObject implements Drawable {
 
     }
 
-    protected void postLTTransform(Graphics g, Point originScreen, Transform gXForm)
+    protected void postLTTransform(Graphics g, Point originScreen,
+                                   Transform gXForm)
     {
         gXForm.translate(-originScreen.getX(),-originScreen.getY());
         g.setTransform(gXForm);
@@ -143,24 +113,6 @@ public class GameObject implements Drawable {
         g.setTransform(gxForm);
     }
 
-    protected void cn1ForwardPrimitiveTranslate(Graphics g, Dimension pDimension)
-    {
-        Transform gxForm = Transform.makeIdentity();
-        g.getTransform(gxForm);
-        gxForm.translate(-pDimension.getWidth()/2f,
-                        -pDimension.getHeight()/2f);
-        g.setTransform(gxForm);
-    }
-
-    protected void cn1ReversePrimitiveTranslate(Graphics g, Dimension pDimension)
-    {
-        Transform gxForm = Transform.makeIdentity();
-        g.getTransform(gxForm);
-        gxForm.translate(pDimension.getWidth()/2f,
-                        pDimension.getHeight()/2f);
-        g.setTransform(gxForm);
-    }
-
     public Transform flipGameObjectsAfterVTM(Point containerOrigin,
                                            Point screenOrigin)
     {
@@ -171,8 +123,8 @@ public class GameObject implements Drawable {
 
         localTransform.translate(   myTranslation.getTranslateX(),
                                     myTranslation.getTranslateY());
-        localTransform.concatenate(myRotation);
         localTransform.scale(myScale.getScaleX(),myScale.getScaleY());
+        localTransform.concatenate(myRotation);
 
         localTransform.translate(-screenOrigin.getX(),-screenOrigin.getY());
         localTransform.translate(containerOrigin.getX(),containerOrigin.getY());
@@ -180,8 +132,4 @@ public class GameObject implements Drawable {
         return localTransform;
 
     }
-
-
-    
-
 }

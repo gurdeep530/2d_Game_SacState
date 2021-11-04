@@ -12,7 +12,6 @@ import org.csc133.a3.GameWorld;
 public class MapView extends Container{
 
     GameWorld gw;
-    Helicopter h;
     private static int counter = 0;
 
     public MapView(GameWorld gw)
@@ -24,11 +23,11 @@ public class MapView extends Container{
     public void paint(Graphics g)
     {
         super.paint(g);
-
+        setupVTM(g);
         for(GameObject go: gw.getGameObjectCollection()) {
+
             Point parentOrigin = new Point(this.getX(), this.getY());
             Point screenOrigin = new Point(getAbsoluteX(),getAbsoluteY());
-            setupVTM(g);
             go.draw(g,parentOrigin, screenOrigin);
         }
 

@@ -210,7 +210,6 @@ public class Fire extends Fixed implements Drawable {
         return num;
     }
 
-
     //'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     //Getter for Fire Bounds and Sizes
 

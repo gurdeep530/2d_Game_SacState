@@ -65,7 +65,7 @@ public class GameWorld {
             if ((ticker == 30)) {
                 ticker = 0;
                 f.grow(getGameObjectCollection());
-                //b.buildingDamages(f.FireSizes());
+                b.buildingDamages(f.FireSizes());
             }
         }
         if (HELI_FUEL <= 0) {

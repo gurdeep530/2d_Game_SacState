@@ -22,8 +22,92 @@ public class Fire extends Fixed implements Drawable {
 
     private final Random RND = new Random();
 
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //Fire State Pattern
+    //
+    FireState fireState;
+    private void changeState(FireState fireState)
+    {
+        this.fireState = fireState;
+    }
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private abstract class FireState
+    {
+        protected Fire getFire()
+        {
+            return Fire.this;
+        }
+        protected void startFire(Transform fire){}
+        protected void grow(ArrayList<GameObject> gameObjects){}
+        protected void shrink(GameObject go, int water){}
+        protected Boolean areAllFiresOut(){
+            boolean firesAreOut = false;
+            for(Dimension dim : FIRE_SIZE)
+            {
+                firesAreOut = dim.getWidth() <= 0;
+                if(!firesAreOut)
+                    break;
+            }
+            return firesAreOut;}
+
+    }
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private class UnStarted extends FireState {
+        @Override
+        protected void startFire(Transform fire)
+        {
+            int num = ((int) ((DISP_W * .005) + RND.nextInt(15)));
+            RANDOM_NUM.add(changeRandomNumberIfItExistsInTheArray(num));
+            int i = RANDOM_NUM.size() - 1;
+
+            setDimensions(new Dimension(RANDOM_NUM.get(i), RANDOM_NUM.get(i)));
+            FIRE_SIZE.add(new Dimension(getDimensionsW(),getDimensionsH()));
+            FIRES.add(fire);
+
+            getFire().changeState(new Burning());
+        }
+    }
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private class Burning extends FireState {
+        @Override
+        public void shrink(GameObject go, int water) {
+
+            int i = whichFireIsMapViewTryingToDraw(go.myTranslation);
+
+            FIRE_SIZE.get(i).setWidth(FIRE_SIZE.get(i).getWidth() - (water / 5));
+
+            if(FIRE_SIZE.get(i).getWidth() <= 0) {
+                FIRE_SIZE.get(i).setWidth(0);
+                if(areAllFiresOut()) {
+                    getFire().changeState(new Extinguished());
+                }
+            }
+        }
+        @Override
+        protected void grow(ArrayList<GameObject> gameObjects) {
+            int i = 0;
+            for(GameObject go: gameObjects) {
+                if (go instanceof Fire) {
+                    if(FIRE_SIZE.get(i).getWidth() > 0) {
+                        FIRE_SIZE.get(i).setWidth(
+                                FIRE_SIZE.get(i).getWidth()
+                                        + RND.nextInt(5));
+                    }
+                    i++;
+                }
+            }
+        }
+
+    }
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private class Extinguished extends FireState {
+    }
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //Fire Class
+
     public Fire(Fire fire, Dimension worldSize)
     {
+        fireState = new UnStarted();
         setDimensions(new Dimension(0,0));
         setColor(ColorUtil.MAGENTA);
 
@@ -34,13 +118,17 @@ public class Fire extends Fixed implements Drawable {
     public Fire()
     {}
 
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    //Drawing
     @Override
     public void draw(Graphics g, Point containerOrigin, Point screenOrigin)
     {
         localDraw(g,containerOrigin,screenOrigin);
         g.resetAffine();
     }
-    void localDraw(Graphics g, Point containerOrigin, Point screenOrigin) {
+    @Override
+    public void localDraw(Graphics g, Point containerOrigin,
+                         Point screenOrigin) {
 
         Font f = Font.createSystemFont(FACE_SYSTEM, STYLE_PLAIN, SIZE_LARGE);
 
@@ -51,6 +139,8 @@ public class Fire extends Fixed implements Drawable {
         localTransform(gFireForm);
         postLTTransform(g, screenOrigin,gFireForm);
 
+        g.setTransform(flipGameObjectsAfterVTM( containerOrigin, screenOrigin));
+
         createFires(g);
 
         resetTranformToOrginal(g);
@@ -59,67 +149,25 @@ public class Fire extends Fixed implements Drawable {
 
     }
 
-    public Point2D[] getFireBounds(GameObject go) {
-
-        Point2D[] bounds = new Point2D[4];
-
-        //top left point
-        bounds[0] = new Point2D(go.myTranslation.getTranslateX() - 50,
-                                go.myTranslation.getTranslateY() - 50);
-
-        //top right point
-        bounds[1] = new Point2D(go.myTranslation.getTranslateX()
-                                        + go.getDimensionsW() + 50,
-                                go.myTranslation.getTranslateY() - 50);
-
-        //bottom left
-        bounds[2] = new Point2D(go.myTranslation.getTranslateX() - 50,
-                                go.myTranslation.getTranslateY()
-                                        + go.getDimensionsW() + 50);
-
-        //bottom right
-        bounds[3] = new Point2D(go.myTranslation.getTranslateX()
-                                        + go.getDimensionsW() + 50,
-                                go.myTranslation.getTranslateY()
-                                        + go.getDimensionsW() + 50);
-        return bounds;
-    }
-
-    public void shrink(GameObject go, int water) {
-
-        int i = whichFireIsMapViewTryingToDraw(go.myTranslation);
-
-        FIRE_SIZE.get(i).setWidth(FIRE_SIZE.get(i).getWidth() - (water / 5));
-
-        if(FIRE_SIZE.get(i).getWidth() <= 0) {
-            FIRE_SIZE.get(i).setWidth(0);
-        }
-    }
-
-    public void grow(int i) {
-
-        if(FIRE_SIZE.get(i).getWidth() > 0) {
-            FIRE_SIZE.get(i).setWidth(
-                    FIRE_SIZE.get(i).getWidth() + RND.nextInt(5));
-        }
-    }
-
-    public Boolean areFiresOut()
+    private void drawFire(Graphics g, int whichFire)
     {
-        boolean firesAreOut = false;
-        for(Dimension dim : FIRE_SIZE)
-        {
-            firesAreOut = dim.getWidth() <= 0;
+        g.fillArc(  -FIRE_SIZE.get(whichFire).getWidth()/2,
+                -FIRE_SIZE.get(whichFire).getWidth()/2,
+                FIRE_SIZE.get(whichFire).getWidth(),
+                FIRE_SIZE.get(whichFire).getWidth(),
+                0, 360);
 
-        }
-        return firesAreOut;
     }
-
-    public ArrayList<Dimension> FireSizes()
+    private void drawFireLabel(Graphics g, int whichFire)
     {
-        return FIRE_SIZE;
-    }
+        String label;
 
+        label = String.valueOf(FIRE_SIZE.get(whichFire).getWidth());
+        g.drawString(label,
+                FIRE_SIZE.get(whichFire).getWidth(),
+                FIRE_SIZE.get(whichFire).getWidth());
+
+    }
     private int whichFireIsMapViewTryingToDraw(Transform fire)
     {
         int whichFire = 0;
@@ -136,19 +184,21 @@ public class Fire extends Fixed implements Drawable {
         return whichFire;
     }
 
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    //Creating Fires
+
     private void getFire(Transform fire) {
-        createLocalInstanceOfFires(fire);
+        fireState.startFire(fire);
     }
+    private void createFires(Graphics g)
+    {
+        int whichFire = whichFireIsMapViewTryingToDraw(myTranslation);
+        if(FIRE_SIZE.get(whichFire).getWidth() > 0) {
 
-    private void createLocalInstanceOfFires(Transform fire) {
+            drawFireLabel(g,whichFire);
 
-        int num = ((int) ((DISP_W * .005) + RND.nextInt(15)));
-        RANDOM_NUM.add(changeRandomNumberIfItExistsInTheArray(num));
-        int i = RANDOM_NUM.size() - 1;
-
-        setDimensions(new Dimension(RANDOM_NUM.get(i), RANDOM_NUM.get(i)));
-        FIRE_SIZE.add(new Dimension(getDimensionsW(),getDimensionsH()));
-        FIRES.add(fire);
+            drawFire(g, whichFire);
+        }
     }
 
     private int changeRandomNumberIfItExistsInTheArray(int num)
@@ -160,35 +210,53 @@ public class Fire extends Fixed implements Drawable {
         return num;
     }
 
-    private void createFires(Graphics g)
-    {
 
-        int whichFire = whichFireIsMapViewTryingToDraw(myTranslation);
-        if(FIRE_SIZE.get(whichFire).getWidth() > 0) {
+    //'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    //Getter for Fire Bounds and Sizes
 
-            drawFireLabel(g,whichFire);
+    public Point2D[] getFireBounds(GameObject go) {
 
-            drawFire(g, whichFire);
-        }
+        Point2D[] bounds = new Point2D[4];
+
+        //top left point
+        bounds[0] = new Point2D(go.myTranslation.getTranslateX() - 50,
+                go.myTranslation.getTranslateY() - 50);
+
+        //top right point
+        bounds[1] = new Point2D(go.myTranslation.getTranslateX()
+                + go.getDimensionsW() + 50,
+                go.myTranslation.getTranslateY() - 50);
+
+        //bottom left
+        bounds[2] = new Point2D(go.myTranslation.getTranslateX() - 50,
+                go.myTranslation.getTranslateY()
+                        + go.getDimensionsW() + 50);
+
+        //bottom right
+        bounds[3] = new Point2D(go.myTranslation.getTranslateX()
+                + go.getDimensionsW() + 50,
+                go.myTranslation.getTranslateY()
+                        + go.getDimensionsW() + 50);
+        return bounds;
     }
 
-    private void drawFire(Graphics g, int whichFire)
+    public ArrayList<Dimension> FireSizes()
     {
-        g.fillArc(  -FIRE_SIZE.get(whichFire).getWidth()/2,
-                    -FIRE_SIZE.get(whichFire).getWidth()/2,
-                    FIRE_SIZE.get(whichFire).getWidth(),
-                    FIRE_SIZE.get(whichFire).getWidth(),
-                    0, 360);
-
+        return FIRE_SIZE;
     }
-    private void drawFireLabel(Graphics g, int whichFire)
+
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    //Behavior
+    public void shrink(GameObject go, int water) {
+        fireState.shrink(go,water);
+    }
+
+    public void grow(ArrayList<GameObject> gameObjects) {
+        fireState.grow(gameObjects);
+    }
+
+    public Boolean areFiresOut()
     {
-        String label;
-
-        label = String.valueOf(FIRE_SIZE.get(whichFire).getWidth());
-        g.drawString(label,
-                FIRE_SIZE.get(whichFire).getWidth(),
-                FIRE_SIZE.get(whichFire).getWidth());
-
+        return fireState.areAllFiresOut();
     }
 }

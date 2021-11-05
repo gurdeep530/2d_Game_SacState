@@ -23,9 +23,9 @@ public class MapView extends Container{
     public void paint(Graphics g)
     {
         super.paint(g);
-        setupVTM(g);
-        for(GameObject go: gw.getGameObjectCollection()) {
 
+        for(GameObject go: gw.getGameObjectCollection()) {
+            setupVTM(g);
             Point parentOrigin = new Point(this.getX(), this.getY());
             Point screenOrigin = new Point(getAbsoluteX(),getAbsoluteY());
             go.draw(g,parentOrigin, screenOrigin);

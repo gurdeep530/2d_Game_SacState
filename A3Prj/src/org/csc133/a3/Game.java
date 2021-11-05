@@ -28,6 +28,7 @@ public class Game extends Form implements Runnable {
 
         addKeyListener('Q', new QuitCommand(gw));
         addKeyListener('d', new DrinkCommand(gw));
+        addKeyListener('s', new StartOrStopEngineCommand(gw));
         addKeyListener('f', new FightCommand(gw));
         addKeyListener(-91, new AccelerateCommand(gw));
         addKeyListener(-92, new DecelerateCommand(gw));
@@ -50,6 +51,7 @@ public class Game extends Form implements Runnable {
         mv.update();
         gw.tick();
         gc.update();
+        cc.update();
     }
 
 }

@@ -7,7 +7,7 @@ import com.codename1.ui.geom.Point;
 import com.codename1.ui.geom.Point2D;
 import org.csc133.a3.Interfaces.Drawable;
 
-public class GameObject implements Drawable {
+public abstract class GameObject implements Drawable {
 
     final Point2D location;
     int color;
@@ -28,6 +28,11 @@ public class GameObject implements Drawable {
     public void setColor(int color)
     {
         this.color = color;
+    }
+
+    public int getColor()
+    {
+        return color;
     }
 
     public Dimension getDimension(){
@@ -57,10 +62,8 @@ public class GameObject implements Drawable {
 
     }
 
-    void localDraw(Graphics g, Point containerOrigin, Point originScreen)
-    {
-
-    }
+    abstract public void localDraw(Graphics g, Point containerOrigin,
+                                   Point originScreen);
 
     protected void rotate(double degrees) {
         myRotation.rotate((float)Math.toRadians(degrees), 0, 0);
@@ -108,7 +111,6 @@ public class GameObject implements Drawable {
     {
         Transform gxForm = Transform.makeIdentity();
         g.getTransform(gxForm);
-        myTranslation.setTranslation(parentOrigin.getX(),parentOrigin.getY());
         localTransform(gxForm);
         g.setTransform(gxForm);
     }

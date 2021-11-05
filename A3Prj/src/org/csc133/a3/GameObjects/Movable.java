@@ -1,5 +1,8 @@
 package org.csc133.a3.GameObjects;
 
+import com.codename1.ui.Graphics;
+import com.codename1.ui.geom.Point;
+
 public class Movable extends GameObject{
 
     private static int HEADING = 0;
@@ -53,5 +56,10 @@ public class Movable extends GameObject{
     public int Heading()
     {
         return HEADING;
+    }
+
+    @Override
+    public void localDraw(Graphics g, Point containerOrigin, Point originScreen) {
+
     }
 }

@@ -6,10 +6,11 @@ import com.codename1.ui.Transform;
 import com.codename1.ui.geom.Dimension;
 import com.codename1.ui.geom.Point;
 import com.codename1.ui.geom.Point2D;
+import org.csc133.a3.GameObjects.HeliParts.Arc;
+import org.csc133.a3.GameObjects.HeliParts.Rectangle;
 import org.csc133.a3.Interfaces.Drawable;
 import org.csc133.a3.Interfaces.Steerable;
 
-import javax.swing.tree.FixedHeightLayoutCache;
 import java.util.ArrayList;
 
 import static com.codename1.ui.CN.*;
@@ -24,54 +25,239 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     private final int DISP_W;
     private ArrayList<GameObject> heliParts;
     private HeliBlade heliBlade;
-    private static double heliBladeRotation;
+    private static float rotationSpeed;
+    private static int water;
     private static int HELI_TRANS_X, HELI_TRANS_Y;
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    private static final int BUBBLE_RADIUS = 125;
+    //Helicopter State Pattern
+    //
 
-    private static class HeliBubble extends GameObject {
-        public HeliBubble() {
-            setDimensions(new Dimension(2 * BUBBLE_RADIUS,
-                                        2 * BUBBLE_RADIUS));
+    HeliState heliState;
+    static boolean isOn = false;
+    private void changeState(HeliState heliState)
+    {
+         this.heliState = heliState;
+    }
+    public boolean getHeliState()
+    {
+        return isOn;
+    }
+
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private abstract class HeliState{
+        protected Helicopter getHeli()
+        {
+            return Helicopter.this;
+        }
+        protected void startOrStopEngine(){}
+        protected void accelerate(){}
+        protected void decelerate(){}
+        protected void steerLeft() {}
+        protected void steerRight(){}
+        protected int consumeFuel( int fuel)
+        {
+            return fuel;
+        }
+        protected void drink(){}
+        protected void fight(Fire fire, ArrayList<GameObject> GameObjects){}
+        protected boolean hasLandedAt()
+        {
+            return false;
+        }
+    }
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private class Off extends HeliState{
+
+        @Override
+        protected void startOrStopEngine()
+        {
+            getHeli().changeState(new Starting());
+        }
+        @Override
+        protected boolean hasLandedAt() {
+            return IsHeliOverHeliPad() && Speed() == 0;
         }
 
-        public void localDraw(Graphics g, Point parentOrigin,
-                              Point originScreen) {
-            containerTranslate(g, parentOrigin);
+    }
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private class Starting extends HeliState{
 
-            g.drawArc(-getDimensionsW() / 2, -getDimensionsH() / 2,
-                    getDimensionsW(), getDimensionsH(),
-                    -135, -270);
+        private Starting()
+        {
+            beginRotatingBlade();
+        }
+        @Override
+        protected void startOrStopEngine()
+        {
+            isOn = false;
+            getHeli().changeState(new Stopping());
+        }
+        protected void beginRotatingBlade()
+        {
+            while(rotationSpeed != -10) {
+                rotationSpeed--;
+                updateLocalTransforms();
+            }
+        }
+        @Override
+        protected void accelerate(){
+            if(rotationSpeed == -10) {
+                getHeli().changeState(new Ready());
+            }
+        }
+        @Override
+        protected int consumeFuel(int fuel)
+        {
+            if(fuel < 0)
+                fuel = 0;
+            else
+                fuel -= .5;
+            return fuel;
+        }
+    }
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private class Stopping extends HeliState{
+
+        protected Stopping()
+        {
+            stopRotatingBlade();
+        }
+        @Override
+        protected void startOrStopEngine()
+        {
+            isOn = true;
+            getHeli().changeState(new Starting());
+        }
+        protected void stopRotatingBlade()
+        {
+            while(rotationSpeed != 0) {
+                rotationSpeed++;
+                updateLocalTransforms();
+            }
+            getHeli().changeState(new Off());
+        }
+        @Override
+        protected void decelerate() {
+            if(Speed() == 0)
+                getHeli().changeState(new Off());
+        }
+    }
+
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private class Ready extends HeliState {
+
+        @Override
+        protected void startOrStopEngine() {
+            if(Speed() == 0)
+                getHeli().changeState(new Stopping());
+            else {
+                getHeli().changeState(new Ready());
+            }
+        }
+        @Override
+        protected void steerLeft()
+        {
+            ChangeDirection(15);
+        }
+        @Override
+        protected void steerRight()
+        {
+            ChangeDirection(-15);
+        }
+        @Override
+        protected void accelerate()
+        {
+            if (Speed() < MAX_SPEED)
+                ChangeSpeed(1);
+        }
+        @Override
+        protected void decelerate() {
+            if (Speed() > 0)
+                ChangeSpeed(-1);
+        }
+        @Override
+        protected void drink()
+        {
+            if (Speed() < 2
+                    && water != 1000
+                    && IsHeliOverRiver())
+            {
+                water += 100;
+            }
+        }
+        @Override
+        protected void fight(Fire fire, ArrayList<GameObject> gameObjects)
+        {
+            int i = 0;
+            for(GameObject go: gameObjects) {
+                if(go instanceof Fire) {
+                    if (IsHeliOverFire(fire.getFireBounds(go))) {
+                        fire.shrink(go, water);
+                        break;
+                    }
+                    i = i + 1;
+                }
+            }
+            water = 0;
+        }
+        @Override
+        protected int consumeFuel(int fuel)
+        {
+            if(fuel < 0)
+                fuel = 0;
+            else if(Speed() == 0)
+            {
+                fuel -= .5;
+            }
+            else
+                fuel -= (int) Math.pow(Speed(), 2);
+
+            return fuel;
         }
     }
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //Parts
+
+    private static final int BUBBLE_RADIUS = 125;
+
+    private static class HeliBubble extends Arc {
+        public HeliBubble() {
+            super(  ColorUtil.YELLOW,
+                    2*BUBBLE_RADIUS,2*BUBBLE_RADIUS,
+                    0, (float) (BUBBLE_RADIUS *.80),
+                    1,1,
+                    0,
+                    -135,-270,
+                    false);
+        }
+
+    }
+
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     private static final int ENGINE_BLOCK_W = (int) (BUBBLE_RADIUS * 1.8);
     private static final int ENGINE_BLOCK_H = ENGINE_BLOCK_W / 3;
 
-    private static class HeliEngineBlock extends GameObject {
+    private static class HeliEngineBlock extends Rectangle {
         public HeliEngineBlock() {
-            setDimensions(new Dimension(ENGINE_BLOCK_W, ENGINE_BLOCK_H));
-        }
-
-
-        public void localDraw(Graphics g, Point parentOrigin,
-                              Point originScreen) {
-            containerTranslate(g, parentOrigin);
-
-            g.drawRect(-getDimensionsW() / 2, -getDimensionsH() / 2,
-                    getDimensionsW(), getDimensionsH());
+            super(  ColorUtil.YELLOW,
+                    ENGINE_BLOCK_W,ENGINE_BLOCK_H,
+                    0,ENGINE_BLOCK_H *3,
+                    1,1,
+                    0,
+                    false);
         }
     }
-
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     private static final int TAIL_HEIGHT = 75;
     private static final int TAIL_WIDTH = 65;
+    private static final int TAIL_Y_LOC = (int) (ENGINE_BLOCK_H*4.5f);
 
     private static class HeliTailBody extends GameObject {
         public HeliTailBody() {
             setDimensions(new Dimension(TAIL_WIDTH, TAIL_HEIGHT));
+            translate(0,TAIL_Y_LOC);
         }
 
         public void localDraw(Graphics g, Point parentOrigin,
@@ -110,11 +296,11 @@ public class Helicopter extends Movable implements Steerable, Drawable {
                     -getDimensionsW() / 3, getDimensionsH() + 25);
         }
     }
-
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     private static class HeliTailRotator extends GameObject {
         public HeliTailRotator() {
             setDimensions(45, 45);
+            translate(0,TAIL_Y_LOC + TAIL_HEIGHT + 25);
         }
 
         public void localDraw(Graphics g, Point parentOrigin,
@@ -153,101 +339,127 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         }
 
     }
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    private static class HeliSkids extends GameObject {
-        private static final int SKID_WIDTH = 20;
-        private static final int SKID_HEIGHT = 100;
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private static final int SKID_WIDTH = 20;
+    private static final int SKID_HEIGHT = 300;
+    private static final int SKID_X_LOC = 160;
+    private static class HeliRightSkid extends Rectangle {
 
-        public HeliSkids() {
-            setDimensions(SKID_WIDTH, SKID_HEIGHT);
-
+        public HeliRightSkid() {
+            super(ColorUtil.YELLOW,
+                    SKID_WIDTH, SKID_HEIGHT,
+                    SKID_X_LOC, ENGINE_BLOCK_H * 2,
+                    1, 1,
+                    0,
+                    false);
         }
+    }
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private static class HeliLeftSkid extends Rectangle{
 
-        public void localDraw(Graphics g, Point parentOrigin,
-                              Point originScreen) {
-            containerTranslate(g, parentOrigin);
-
-            drawSkids(g);
-            drawSkidConnectors(g);
+        public HeliLeftSkid() {
+            super(  ColorUtil.YELLOW,
+                    SKID_WIDTH, SKID_HEIGHT,
+                    -SKID_X_LOC, ENGINE_BLOCK_H * 2,
+                    1, 1,
+                    0,
+                    false);
         }
+    }
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private static final int CONNECTOR_WITDH = 35;
+    private static final int CONNECTOR_HEIGHT = 15;
+    private static class HeliLeftBottomSkidConnector extends Rectangle{
 
-        private void drawSkids(Graphics g) {
-            g.setColor(ColorUtil.YELLOW);
-            g.drawRect(150, -600,
-                        getDimensionsW(), getDimensionsH() * 3);
-            g.drawRect(-170, -600,
-                        getDimensionsW(), getDimensionsH() * 3);
+        public HeliLeftBottomSkidConnector()
+        {
+            super(  ColorUtil.GRAY,
+                    CONNECTOR_WITDH, CONNECTOR_HEIGHT,
+                    -SKID_X_LOC/1.25f, ENGINE_BLOCK_H *3,
+                    1, 1,
+                    0,
+                    true);
         }
+    }
+    private static class HeliLeftTopSkidConnector extends Rectangle{
 
-        private void drawSkidConnectors(Graphics g) {
-            g.setColor(ColorUtil.GRAY);
-
-            g.fillRect(115, -550, 35, 15);
-            g.fillRect(115, -375, 35, 15);
-
-            g.fillRect(-145, -550, 35, 15);
-            g.fillRect(-145, -375, 35, 15);
-
+        public HeliLeftTopSkidConnector()
+        {
+            super(  ColorUtil.GRAY,
+                    (int) (CONNECTOR_WITDH/1.25), CONNECTOR_HEIGHT,
+                    -SKID_X_LOC/1.18f, ENGINE_BLOCK_H,
+                    1, 1,
+                    0,
+                    true);
         }
     }
 
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    private static class HeliBlade extends GameObject {
+    private static class HeliRightBottomSkidConnector extends Rectangle{
+
+        public HeliRightBottomSkidConnector()
+        {
+            super(  ColorUtil.GRAY,
+                    CONNECTOR_WITDH, CONNECTOR_HEIGHT,
+                    SKID_X_LOC/1.25f, ENGINE_BLOCK_H *3,
+                    1, 1,
+                    0,
+                    true);
+        }
+    }
+    private static class HeliRightTopSkidConnector extends Rectangle{
+
+        public HeliRightTopSkidConnector()
+        {
+            super(  ColorUtil.GRAY,
+                    (int) (CONNECTOR_WITDH/1.25), CONNECTOR_HEIGHT,
+                    SKID_X_LOC/1.18f, ENGINE_BLOCK_H,
+                    1, 1,
+                    0,
+                    true);
+        }
+    }
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    private final static int BLADE_WIDTH = 25;
+    private final static int BLADE_LENGTH = BUBBLE_RADIUS;
+    private static int rotation = 1;
+    private static class HeliBlade extends Rectangle {
 
         public HeliBlade() {
-            setDimensions(15, 500);
-            translate(6, -125);
-            rotate(heliBladeRotation);
-        }
-
-        public void localDraw(Graphics g, Point parentOrigin,
-                              Point originScreen) {
-
-            transformsToMakeBladeRotate(g,parentOrigin,originScreen);
-
-            drawBlade(g);
-            drawBladeConnector(g);
-        }
-
-        private void drawBlade(Graphics g) {
-            g.setColor(ColorUtil.GRAY);
-            g.fillRect(0, -getDimensionsH() / 2,
-                    getDimensionsW(), getDimensionsH());
-        }
-
-        private void drawBladeConnector(Graphics g) {
-            g.setColor(ColorUtil.BLACK);
-            g.fillArc(0, 0,
-                    12, 12, 0, 360);
-
+            super(  ColorUtil.GRAY,
+                    BLADE_WIDTH,
+                    BLADE_LENGTH*5,
+                    0,ENGINE_BLOCK_H*3.75f,
+                    1,1,
+                    rotation,
+                    true);
         }
 
         public void updateLocalTransform(double rotationSpeed) {
-            heliBladeRotation += rotationSpeed;
+            if(rotationSpeed != 0)
+                rotation += (3 * rotationSpeed);
         }
-        private void transformsToMakeBladeRotate(Graphics g,
-                                                 Point parentOrigin,
-                                                 Point originScreen) {
-            Transform gxForm = Transform.makeIdentity();
-            localTransform(gxForm);
-            g.getTransform(gxForm);
-            gxForm.translate(-getDimensionsW() / 2f,
-                    -getDimensionsH() / 2f);
-            gxForm.translate(-parentOrigin.getX(), -parentOrigin.getY());
-            gxForm.translate(originScreen.getX(), originScreen.getY());
+    }
+    //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    final static int SHAFT_WIDTH = 12;
+    final static int SHAFT_HEIGHT = 12;
+    private static class HeliShaft extends Arc{
 
-            gxForm.translate(   myTranslation.getTranslateX(),
-                                myTranslation.getTranslateY());
-            gxForm.concatenate(myRotation);
-            gxForm.scale(myScale.getScaleX(), myScale.getScaleY());
-
-            gxForm.translate(-originScreen.getX(), -originScreen.getY());
-            gxForm.translate(parentOrigin.getX(), parentOrigin.getY());
-            g.setTransform(gxForm);
+        public HeliShaft()
+        {
+            super(  ColorUtil.BLACK,
+                    SHAFT_WIDTH,SHAFT_HEIGHT,
+                    0,ENGINE_BLOCK_H*3,
+                    1,1,
+                    0,
+                    0, 360,
+                    true);
         }
+
     }
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //Helicopter
+
     public Helicopter(Dimension worldSize) {
         hp = new HeliPad(worldSize);
         r = new River(worldSize);
@@ -255,11 +467,59 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         DISP_H = worldSize.getHeight();
 
         setUpHelicopter();
+        heliState = new Off();
         addAllHeliParts();
 
         setColor(ColorUtil.YELLOW);
     }
 
+
+    //.......................................................................
+    //Drawing
+
+    @Override
+    public void draw(Graphics g, Point containerOrigin,
+                         Point originScreen) {
+        g.setColor(color);
+
+        localDraw(g,containerOrigin,originScreen);
+
+        g.resetAffine();
+    }
+
+    @Override
+    public void localDraw(Graphics g, Point containerOrigin,
+                          Point originScreen) {
+        for (GameObject go : heliParts) {
+            g.setTransform
+                    (flipGameObjectsAfterVTM(containerOrigin, originScreen));
+            go.localDraw(g, containerOrigin, originScreen);
+        }
+
+        drawFuelAndWaterLabels(g);
+    }
+    private void drawFuelAndWaterLabels(Graphics g) {
+
+        Font f = Font.createSystemFont(FACE_SYSTEM, STYLE_PLAIN, SIZE_SMALL);
+        g.setFont(f);
+        g.setColor(ColorUtil.YELLOW);
+        Transform labelForm = Transform.makeIdentity();
+        labelForm.setTranslation(   (int)myTranslation.getTranslateX(),
+                (int)myTranslation.getTranslateY() + 150);
+
+        g.setTransform(labelForm);
+
+        g.drawString(HELI_LABELS[0],0, 0);
+        g.drawString(HELI_LABELS[1],0, 30);
+
+    }
+
+    public void updateLocalTransforms() {
+        heliBlade.updateLocalTransform(rotationSpeed);
+    }
+
+    //.........................................................................
+    //Setting up parts for Helicopter.
     private void addAllHeliParts()
     {
         heliParts = new ArrayList<>();
@@ -267,9 +527,16 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         heliParts.add(new HeliEngineBlock());
         heliParts.add(new HeliTailBody());
         heliParts.add(new HeliTailRotator());
-        heliParts.add(new HeliSkids());
+        heliParts.add(new HeliRightSkid());
+        heliParts.add(new HeliRightTopSkidConnector());
+        heliParts.add(new HeliRightBottomSkidConnector());
+        heliParts.add(new HeliLeftSkid());
+        heliParts.add(new HeliLeftTopSkidConnector());
+        heliParts.add(new HeliLeftBottomSkidConnector());
         heliBlade = new HeliBlade();
         heliParts.add(heliBlade);
+        heliParts.add(new HeliShaft());
+
     }
 
     private void setUpHelicopter()
@@ -279,43 +546,19 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         scale(.25f, .25f);
         rotate(-Heading());
     }
-    @Override
-    public void draw(Graphics g, Point containerOrigin,
-                         Point originScreen) {
-        g.setColor(color);
-
-        g.setTransform(flipGameObjectsAfterVTM( containerOrigin, originScreen));
-
-        for (GameObject go : heliParts) {
-
-            go.localDraw(g, containerOrigin, originScreen);
-        }
-
-        drawFuelAndWaterLabels(g);
-        g.resetAffine();
-    }
-
-    public void updateLocalTransforms() {
-        heliBlade.updateLocalTransform(-200d);
-    }
-
-    @Override
-    public void steerLeft() {
-        ChangeDirection(15);
-    }
-
-    @Override
-    public void steerRight() {
-        ChangeDirection(-15);
-    }
-
     public void setHeliLocation() {
 
         HELI_TRANS_X = (int) (DISP_W / 2.0) -Move()[1];
-        HELI_TRANS_Y = (int) (DISP_H - (DISP_H - (DISP_H * .9)))
+        HELI_TRANS_Y = (int) (DISP_H - (DISP_H - (DISP_H * .92)))
                                 - Move()[0];
     }
 
+    public void setLabels(int fuel) {
+        HELI_LABELS[0] = ("F: " + fuel);
+        HELI_LABELS[1] = ("W: " + water);
+    }
+
+    //..........................................................................
     //Checks for if heli is over the River and fire.
     //I put them in the Heli class because the heli is
     //performing the action on the riverDimension/fire so the heli needs
@@ -339,7 +582,7 @@ public class Helicopter extends Movable implements Steerable, Drawable {
 
     }
 
-    public boolean CanHeliLand() {
+    public boolean IsHeliOverHeliPad() {
         Point2D[] circleBounds = hp.CircleBounds();
 
         return Speed() == 0
@@ -349,30 +592,43 @@ public class Helicopter extends Movable implements Steerable, Drawable {
                 && circleBounds[2].getY() >= HELI_TRANS_Y;
     }
 
-    public void setLabels(int fuel, int water) {
-        HELI_LABELS[0] = ("F: " + fuel);
-        HELI_LABELS[1] = ("W: " + water);
+
+    //..........................................................................
+    //Behavior
+    public int consumeFuel(int fuel)
+    {
+        return heliState.consumeFuel(fuel);
     }
-
-    private void drawFuelAndWaterLabels(Graphics g) {
-
-        Font f = Font.createSystemFont(FACE_SYSTEM, STYLE_PLAIN, SIZE_SMALL);
-        g.setFont(f);
-        g.setColor(ColorUtil.YELLOW);
-        Transform labelForm = Transform.makeIdentity();
-        labelForm.setTranslation(   (int)myTranslation.getTranslateX(),
-                                 (int)myTranslation.getTranslateY() + 150);
-
-        g.setTransform(labelForm);
-
-        g.drawString(HELI_LABELS[0],0, 0);
-        g.drawString(HELI_LABELS[1],0, 30);
-
+    public void startOrStopEngine(){
+        heliState.startOrStopEngine();
     }
-
-    private float rotationalSpeed() {
-
-        return 0;
+    public void accelerate()
+    {
+        heliState.accelerate();
+    }
+    public void decelerate()
+    {
+        heliState.decelerate();
+    }
+    @Override
+    public void steerLeft() {
+        heliState.steerLeft();
+    }
+    @Override
+    public void steerRight() {
+        heliState.steerRight();
+    }
+    public void drink()
+    {
+        heliState.drink();
+    }
+    public void fight(Fire fire, ArrayList<GameObject> gameObjects)
+    {
+      heliState.fight(fire,gameObjects);
+    }
+    public Boolean canHeliLand()
+    {
+        return heliState.hasLandedAt();
     }
 }
 

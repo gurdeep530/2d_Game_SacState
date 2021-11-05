@@ -13,9 +13,8 @@ public class GameWorld {
     private Fire f;
     private Helicopter h;
     private Building b;
-    private static int water;
     private static int HELI_FUEL;
-    private int elapsedTime = 0;
+    private static int counter = 0;
     private final ArrayList<GameObject> GAME_OBJECTS = new ArrayList<>();
 
 
@@ -24,7 +23,6 @@ public class GameWorld {
     }
 
     public void init() {
-        water = 0;
         ticker = 0;
         HELI_FUEL = 25000;
 
@@ -44,7 +42,7 @@ public class GameWorld {
             }
         }
         GAME_OBJECTS.add(h);
-        h.setLabels(HELI_FUEL, water);
+        h.setLabels(HELI_FUEL);
     }
 
     public void quit() {
@@ -54,10 +52,9 @@ public class GameWorld {
     public void tick() {
         if (HELI_FUEL > 0) {
 
-            HELI_FUEL -= Math.pow(h.Speed(), 2);
-            if(HELI_FUEL < 0)
-                HELI_FUEL = 0;
-            h.setLabels(HELI_FUEL, water);
+            HELI_FUEL = h.consumeFuel(HELI_FUEL);
+
+            h.setLabels(HELI_FUEL);
 
             h.setHeliLocation();
 
@@ -67,15 +64,8 @@ public class GameWorld {
 
             if ((ticker == 30)) {
                 ticker = 0;
-                int i = 0;
-
-                for(GameObject go: getGameObjectCollection()) {
-                    if (go instanceof Fire) {
-                        f.grow(i);
-                        i+=1;
-                    }
-                }
-                b.buildingDamages(f.FireSizes());
+                f.grow(getGameObjectCollection());
+                //b.buildingDamages(f.FireSizes());
             }
         }
         if (HELI_FUEL <= 0) {
@@ -85,44 +75,31 @@ public class GameWorld {
         {
             getDamageLosingMenu();
         }
-        else if (f.areFiresOut() && h.CanHeliLand())
+        else if (f.areFiresOut() && h.canHeliLand())
         {
             getWinningMenu();
         }
     }
 
     public void Drink() {
-        if (h.Speed() < 2
-                && water != 1000
-                && h.IsHeliOverRiver())
-        {
-            water += 100;
-        }
+        h.drink();
     }
 
     public void Fight() {
-        int i = 0;
-        for(GameObject go: getGameObjectCollection()) {
-            if(go instanceof Fire) {
-                if (h.IsHeliOverFire(f.getFireBounds(go))) {
-                    f.shrink(go, water);
-                    break;
-                }
-                i = i + 1;
-            }
+       h.fight(f, getGameObjectCollection());
+    }
 
-        }
-        water = 0;
+    public void StartOrStopEngine()
+    {
+        h.startOrStopEngine();
     }
 
     public void Accelerate() {
-        if (h.Speed() < h.MAX_SPEED)
-            h.ChangeSpeed(1);
+        h.accelerate();
     }
 
     public void Decelerate() {
-        if (h.Speed() > 0)
-            h.ChangeSpeed(-1);
+        h.decelerate();
     }
 
     public void turnLeft() {
@@ -132,7 +109,6 @@ public class GameWorld {
     public void turnRight() {
         h.steerRight();
     }
-
 
     private void getFuelLosingMenu() {
         Dialog d = new Dialog("Game Over, You Lose!");
@@ -258,5 +234,16 @@ public class GameWorld {
     public void updateLocalTransforms()
     {
         h.updateLocalTransforms();
+    }
+
+    public boolean getHeliState()
+    {
+        if(counter == 0) {
+            counter++;
+            return false;
+        }
+        else {
+            return h.getHeliState();
+        }
     }
 }

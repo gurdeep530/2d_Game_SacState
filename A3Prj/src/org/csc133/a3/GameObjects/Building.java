@@ -42,7 +42,10 @@ public class Building extends Fixed implements Drawable {
         localDraw(g,containerOrigin,screenOrigin);
         g.resetAffine();
     }
-   void localDraw(Graphics g, Point containerOrigin, Point originScreen) {
+
+    @Override
+    public void localDraw(Graphics g, Point containerOrigin,
+                          Point originScreen) {
 
         String[] labels;
 
@@ -53,6 +56,8 @@ public class Building extends Fixed implements Drawable {
         Transform gBuildingForm = preLTTransform(g,originScreen);
         localTransform(gBuildingForm);
         postLTTransform(g, originScreen,gBuildingForm);
+
+        g.setTransform(flipGameObjectsAfterVTM( containerOrigin, originScreen));
 
         labels = getLabels();
         drawBuilding(g, containerOrigin);

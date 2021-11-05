@@ -27,6 +27,7 @@ public class ControlCluster extends Container {
         this.getAllStyles().setBgColor(ColorUtil.WHITE);
         this.getAllStyles().setBgTransparency(255);
 
+
         setLayout(new BorderLayout());
 
         setupButtonCommands();
@@ -54,7 +55,8 @@ public class ControlCluster extends Container {
         fightBtn.setCommand(new FightCommand(gw));
         fightBtn.setText("Fight");
 
-        engineBtn.setText("Start Engine");
+        engineBtn.setCommand(new StartOrStopEngineCommand(gw));
+        setEngineBtnText();
 
         exitBtn.setCommand(new QuitCommand(gw));
         exitBtn.setText("Exit");
@@ -109,6 +111,21 @@ public class ControlCluster extends Container {
         button.setBgTransparency(200);
         button.setBgColor(ColorUtil.LTGRAY);
         button.setFgColor(ColorUtil.BLUE);
+    }
+
+    private void setEngineBtnText()
+    {
+        if(!gw.getHeliState()) {
+            engineBtn.setText("Start Engine");
+        }
+        else
+            engineBtn.setText("Stop Engine");
+
+    }
+
+    public void update()
+    {
+        setupButtonCommands();
     }
 
 }

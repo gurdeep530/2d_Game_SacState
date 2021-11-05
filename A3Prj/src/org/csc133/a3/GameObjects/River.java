@@ -30,13 +30,17 @@ public class River extends Fixed implements Drawable {
         g.resetAffine();
     }
 
-    void localDraw(Graphics g, Point containerOrigin, Point screenOrigin) {
+    @Override
+    public void localDraw(Graphics g, Point containerOrigin,
+                         Point screenOrigin) {
 
         g.setColor(color);
 
         Transform gRiverForm = preLTTransform(g,screenOrigin);
         localTransform(gRiverForm);
         postLTTransform(g, screenOrigin,gRiverForm);
+
+        g.setTransform(flipGameObjectsAfterVTM( containerOrigin, screenOrigin));
 
         g.drawRect( -getDimensionsW()/2,
                     -getDimensionsH()/2,

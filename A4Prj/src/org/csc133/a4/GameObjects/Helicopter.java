@@ -31,7 +31,7 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     private static int HELI_TRANS_X, HELI_TRANS_Y;
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    //Helicopter State Pattern
+    //region Helicopter State Pattern
     //
 
     HeliState heliState;
@@ -192,14 +192,10 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         @Override
         protected void fight(Fire fire, ArrayList<GameObject> gameObjects)
         {
-            int i = 0;
             for(GameObject go: gameObjects) {
-                if(go instanceof Fire) {
-                    if (IsHeliOverFire(fire.getFireBounds(go))) {
+                if (IsHeliOverFire(fire.getFireBounds(go))) {
                         fire.shrink(go, water);
                         break;
-                    }
-                    i = i + 1;
                 }
             }
             water = 0;
@@ -219,15 +215,14 @@ public class Helicopter extends Movable implements Steerable, Drawable {
             return fuel;
         }
     }
-
+    //endregion
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    //Parts
-
+    //region HeliParts
     private static final int BUBBLE_RADIUS = 125;
 
     private static class HeliBubble extends Arc {
-        public HeliBubble() {
-            super(  ColorUtil.YELLOW,
+        public HeliBubble(int color) {
+            super(  color,
                     2*BUBBLE_RADIUS,2*BUBBLE_RADIUS,
                     0, (float) (BUBBLE_RADIUS *.80),
                     1,1,
@@ -243,8 +238,8 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     private static final int ENGINE_BLOCK_H = ENGINE_BLOCK_W / 3;
 
     private static class HeliEngineBlock extends Rectangle {
-        public HeliEngineBlock() {
-            super(  ColorUtil.YELLOW,
+        public HeliEngineBlock(int color) {
+            super(  color,
                     ENGINE_BLOCK_W,ENGINE_BLOCK_H,
                     0,ENGINE_BLOCK_H *3,
                     1,1,
@@ -460,10 +455,13 @@ public class Helicopter extends Movable implements Steerable, Drawable {
 
     }
 
+    //endregion
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    //Helicopter
+    //region Helicopter
 
-    public Helicopter(Dimension worldSize, River river, HeliPad heliPad) {
+    public Helicopter(int bubbleColor, int engineColor,Dimension worldSize,
+                      River river,
+                      HeliPad heliPad) {
         hp = heliPad;
         r = river;
         DISP_W = worldSize.getWidth();
@@ -471,14 +469,12 @@ public class Helicopter extends Movable implements Steerable, Drawable {
 
         setUpHelicopter();
         heliState = new Off();
-        heliParts = addAllHeliParts();
+        heliParts = addAllHeliParts(bubbleColor,engineColor);
 
         setColor(ColorUtil.YELLOW);
     }
-
-
     //.......................................................................
-    //Drawing
+    //region Drawing
 
     @Override
     public void draw(Graphics g, Point containerOrigin,
@@ -520,14 +516,14 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     public void updateLocalTransforms() {
         heliBlade.updateLocalTransform(rotationSpeed);
     }
-
+    //endregion
     //.........................................................................
-    //Setting up parts for Helicopter.
-    ArrayList<GameObject> addAllHeliParts()
+    //region Setting up parts for Helicopter.
+    ArrayList<GameObject> addAllHeliParts(int bubbleColor, int engineColor)
     {
         ArrayList<GameObject>heliParts = new ArrayList<>();
-        heliParts.add(new HeliBubble());
-        heliParts.add(new HeliEngineBlock());
+        heliParts.add(new HeliBubble(bubbleColor));
+        heliParts.add(new HeliEngineBlock(engineColor));
         heliParts.add(new HeliTailBody());
         heliParts.add(new HeliTailRotator());
         heliParts.add(new HeliRightSkid());
@@ -562,12 +558,9 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         HELI_LABELS[0] = ("F: " + fuel);
         HELI_LABELS[1] = ("W: " + water);
     }
-
+    //endregion
     //..........................................................................
-    //Checks for if heli is over the River and fire.
-    //I put them in the Heli class because the heli is
-    //performing the action on the riverDimension/fire so the heli needs
-    //to know if it is over them
+    //region Checks for if heli is over the River and fire.
     public boolean IsHeliOverRiver() {
         Point2D[] riverBounds;
         riverBounds = r.getRiverBounds();
@@ -577,13 +570,8 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     }
 
     public boolean IsHeliOverFire(Point2D[] bounds) {
-        Point2D[] fireBounds;
-        fireBounds = bounds;
 
-        return ((fireBounds[0].getX() <= HELI_TRANS_X)
-                && (fireBounds[1].getY() <= HELI_TRANS_Y)
-                && (fireBounds[1].getX() >= HELI_TRANS_X)
-                && ((fireBounds[2].getY() >= HELI_TRANS_Y)));
+        return IsPointInsideBounds(bounds,HELI_TRANS_X,HELI_TRANS_Y);
 
     }
 
@@ -591,15 +579,11 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         Point2D[] circleBounds = hp.CircleBounds();
 
         return Speed() == 0
-                && circleBounds[0].getX() <= HELI_TRANS_X
-                && circleBounds[1].getY() <= HELI_TRANS_Y
-                && circleBounds[1].getX() >= HELI_TRANS_X
-                && circleBounds[2].getY() >= HELI_TRANS_Y;
+                && IsPointInsideBounds(circleBounds, HELI_TRANS_X,HELI_TRANS_Y);
     }
-
-
+    //endregion
     //..........................................................................
-    //Behavior
+    //region Behavior
     public int consumeFuel(int fuel)
     {
         return heliState.consumeFuel(fuel);
@@ -635,5 +619,9 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     {
         return heliState.hasLandedAt();
     }
+    //endregion
+
+    //endregion
+
 }
 

@@ -17,10 +17,9 @@ public class GameWorld {
     private Building b;
     private River r;
     private HeliPad hp;
+    private Fire.FireDispatch fd;
     private static int HELI_FUEL;
     private static int counter = 0;
-    private final ArrayList<GameObject> GAME_OBJECTS = new ArrayList<>();
-
 
     public GameWorld(){
         worldSize = new Dimension();
@@ -30,29 +29,30 @@ public class GameWorld {
         ticker = 0;
         HELI_FUEL = 25000;
 
-        f = new Fire();
         r = new River(worldSize);
         hp = new HeliPad(worldSize);
         nph = new NonPlayerHelicopter(worldSize,r,hp);
         ph = new PlayerHelicopter(worldSize,r,hp);
-
-        GAME_OBJECTS.add(0,null);
-        GAME_OBJECTS.add(hp);
-        GAME_OBJECTS.add(r);
+        goc = new GameObjectCollection();
+        f = new Fire();
+        goc.gameObjectCollection.add(0,null);
+        goc.gameObjectCollection.add(hp);
+        goc.gameObjectCollection.add(r);
 
         for(int i = 1; i<= 3; i++) {
             b = new Building(i, worldSize);
-            GAME_OBJECTS.add(b);
+            goc.gameObjectCollection.add(b);
             for (int j = 0; j < 3; j++) {
-                f = new Fire(b.setFireInBuilding(f,i), worldSize);
-                GAME_OBJECTS.add(f);
+                f = new Fire(b.setFireInBuilding(f,b), worldSize);
+                goc.gameObjectCollection.add(f);
             }
         }
-        GAME_OBJECTS.add(nph);
-        GAME_OBJECTS.add(ph);
+        goc.gameObjectCollection.add(nph);
+        goc.gameObjectCollection.add(ph);
         ph.setLabels(HELI_FUEL);
-        goc = new GameObjectCollection(GAME_OBJECTS);
-        ph = goc.getPlayerHeli();
+
+        new Fire(goc);
+
     }
 
     public void quit() {
@@ -68,20 +68,20 @@ public class GameWorld {
 
             ph.setHeliLocation();
 
-            GAME_OBJECTS.set(GAME_OBJECTS.size()-1,
-                    new PlayerHelicopter(worldSize,r,hp));
+            goc.gameObjectCollection.set(goc.gameObjectCollection.size()-1,
+                                        new PlayerHelicopter(worldSize,r,hp));
 
             ticker++;
 
             if ((ticker == 30)) {
                 ticker = 0;
-                f.grow(getGameObjectCollection());
+                f.grow(goc.getFires());
                 b.buildingDamages(f.FireSizes());
             }
-            Fire newf = f.spawnNewFire(b, f,worldSize);
+            Fire newf = f.spawnNewFire(goc.getBuildings(),b, f,worldSize);
             if(newf != null) {
                 f = newf;
-                GAME_OBJECTS.add(0, f);
+                goc.gameObjectCollection.add(0, f);
             }
         }
         whichMenuToDisplay();
@@ -89,7 +89,22 @@ public class GameWorld {
 
     public ArrayList<GameObject> getGameObjectCollection()
     {
-        return GAME_OBJECTS;
+        return goc.getGameObjectCollection();
+    }
+
+    public ArrayList<GameObject> getFires()
+    {
+        return goc.getFires();
+    }
+
+    public Fire getFireForMapview()
+    {
+        return f;
+    }
+
+    public void FireDispatchSelector(Fire selectedFire)
+    {
+        f.getFd().whichFireIsSelected(selectedFire);
     }
 
     //region Commands
@@ -98,7 +113,7 @@ public class GameWorld {
     }
 
     public void Fight() {
-       ph.fight(f, getGameObjectCollection());
+       ph.fight(f, goc.getFires());
     }
 
     public void StartOrStopEngine()

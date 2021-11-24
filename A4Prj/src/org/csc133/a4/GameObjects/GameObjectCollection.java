@@ -9,17 +9,19 @@ public class GameObjectCollection {
 
     public List<GameObject> gameObjectCollection;
 
-    public GameObjectCollection(ArrayList<GameObject> gameObjects) {
-        gameObjectCollection = gameObjects;
+    public GameObjectCollection()
+    {
+        gameObjectCollection = new ArrayList<>();
     }
 
-    public List<GameObject> getFires() {
-        return gameObjectCollection.stream()
+
+    public ArrayList<GameObject> getFires() {
+        return (ArrayList<GameObject>) gameObjectCollection.stream()
                 .filter(x->x instanceof Fire)
                 .collect(Collectors.toList());
     }
-    public List<GameObject> getBuildings() {
-        return gameObjectCollection.stream()
+    public ArrayList<GameObject> getBuildings() {
+        return (ArrayList<GameObject>) gameObjectCollection.stream()
                 .filter(x->x instanceof Building)
                 .collect(Collectors.toList());
     }
@@ -43,5 +45,10 @@ public class GameObjectCollection {
         return (River) gameObjectCollection.stream()
                 .filter(x->x instanceof River)
                 .collect(Collectors.toList()).get(0);
+    }
+
+    public ArrayList<GameObject> getGameObjectCollection()
+    {
+        return (ArrayList<GameObject>) gameObjectCollection;
     }
 }

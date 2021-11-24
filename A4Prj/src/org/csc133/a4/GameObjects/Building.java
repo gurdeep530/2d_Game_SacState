@@ -68,12 +68,9 @@ public class Building extends Fixed implements Drawable {
         g.resetAffine();
     }
 
-    public Fire setFireInBuilding(Fire fire, int i)
+    public Fire setFireInBuilding(Fire fire, Building b)
     {
-        if(fire == null)
-            fire = new Fire();
-
-        Point2D[] bounds = getBuildingBounds(i);
+        Point2D[] bounds = getBuildingBounds(b);
 
         int xBound = (int) (RND.nextInt(
                             (int)((bounds[1].getX()) - bounds[0].getX()))
@@ -115,37 +112,28 @@ public class Building extends Fixed implements Drawable {
         return BUILDING_DAMAGE;
     }
 
-    Point2D[] getBuildingBounds(int whichBuilding)
+    Point2D[] getBuildingBounds(Building b)
     {
         Point2D[] bounds = new Point2D[4];
 
         //top left
         bounds[0] = new Point2D(
-                getBuildingTransform(whichBuilding).getTranslateX()
-                                            - (getDimensionsW()/2.0),
-                getBuildingTransform(whichBuilding).getTranslateY()
-                                            + (getDimensionsH()/2.0));
+                b.myTranslation.getTranslateX() - (b.getDimensionsW()/2.0),
+                b.myTranslation.getTranslateY() + (b.getDimensionsH()/2.0));
 
         //top right
         bounds[1] = new Point2D(
-                getBuildingTransform(whichBuilding).getTranslateX()
-                                            + (getDimensionsW()/2.0),
-                getBuildingTransform(whichBuilding).getTranslateY()
-                                            + (getDimensionsH()/2.0));
-
+                b.myTranslation.getTranslateX() + (b.getDimensionsW()/2.0),
+                b.myTranslation.getTranslateY() + (b.getDimensionsH()/2.0));
         //bottom left
         bounds[2] = new Point2D(
-                getBuildingTransform(whichBuilding).getTranslateX()
-                                            - (getDimensionsW()/2.0),
-                getBuildingTransform(whichBuilding).getTranslateY()
-                                            - (getDimensionsH()/2.0));
+                b.myTranslation.getTranslateX() - (b.getDimensionsW()/2.0),
+                b.myTranslation.getTranslateY() - (b.getDimensionsH()/2.0));
 
         //bottom right
         bounds[3] = new Point2D(
-                getBuildingTransform(whichBuilding).getTranslateX()
-                                            + (getDimensionsW()/2.0),
-                getBuildingTransform(whichBuilding).getTranslateY()
-                                            - (getDimensionsH()/2.0));
+                b.myTranslation.getTranslateX() + (b.getDimensionsW()/2.0),
+                b.myTranslation.getTranslateY() - (b.getDimensionsH()/2.0));
 
         return bounds;
     }

@@ -5,6 +5,7 @@ import com.codename1.ui.Graphics;
 import com.codename1.ui.Transform;
 import com.codename1.ui.geom.Dimension;
 import com.codename1.ui.geom.Point;
+import com.codename1.ui.geom.Point2D;
 import org.csc133.a4.GameObjects.*;
 import org.csc133.a4.GameWorld;
 
@@ -13,6 +14,8 @@ public class MapView extends Container{
 
     GameWorld gw;
     private static int counter = 0;
+    private static boolean canNPHSpawn = false;
+
 
     public MapView(GameWorld gw)
     {
@@ -28,7 +31,11 @@ public class MapView extends Container{
             setupVTM(g);
             Point parentOrigin = new Point(this.getX(), this.getY());
             Point screenOrigin = new Point(getAbsoluteX(),getAbsoluteY());
-            if(go != null)
+            if(go instanceof NonPlayerHelicopter) {
+                if (canNPHSpawn)
+                    go.draw(g, parentOrigin, screenOrigin);
+            }
+            else if(go != null)
                 go.draw(g,parentOrigin, screenOrigin);
         }
 
@@ -47,9 +54,17 @@ public class MapView extends Container{
     @Override
     public void pointerPressed(int x, int y)
     {
-        Point mouseClick = new Point(x - getParent().getAbsoluteX(), y - getParent().getAbsoluteY());
-        Point originalPoint = new Point(this.getX(),this.getY());
-
+        Point mouseClick = new Point(x - getParent().getAbsoluteX(),
+                                        y - getParent().getAbsoluteY());
+        for(GameObject go: gw.getFires())
+        {
+            if(go.IsPointInsideBounds(gw.getFireForMapview().getFireBounds(go),
+                    mouseClick.getX(), mouseClick.getY()))
+            {
+                canNPHSpawn = true;
+                gw.FireDispatchSelector((Fire) go);
+            }
+        }
     }
 
     public void update()
@@ -59,7 +74,8 @@ public class MapView extends Container{
     }
 
 
-    private Transform buildWorldND(float winWidth, float winHeight, float winLeft, float winBottom)
+    private Transform buildWorldND(float winWidth, float winHeight,
+                                   float winLeft, float winBottom)
     {
         Transform transform = Transform.makeIdentity();
         transform.scale((1/winWidth), (1/winHeight));

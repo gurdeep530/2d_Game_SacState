@@ -27,6 +27,11 @@ public abstract class GameObject implements Drawable {
         scale(1,1);
     }
 
+    public Transform getMyTranslation()
+    {
+        return myTranslation;
+    }
+
     public void setColor(int color)
     {
         this.color = color;
@@ -135,5 +140,20 @@ public abstract class GameObject implements Drawable {
 
         return localTransform;
 
+    }
+
+    public boolean IsPointInsideBounds(Point2D[] bounds, int xValue,
+                                       int yValue)
+    {
+        return (bounds[0].getX() <= xValue)
+                && (bounds[1].getY() <= yValue)
+                && (bounds[1].getX() >= xValue)
+                && ((bounds[2].getY() >= yValue));
+    }
+
+    public boolean PointMatch(float xValue, float yValue, float xValue2,
+                                       float yValue2)
+    {
+        return (xValue == xValue2) && (yValue == yValue2);
     }
 }

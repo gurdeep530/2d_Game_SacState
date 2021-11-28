@@ -17,7 +17,7 @@ public class GameWorld {
     private Building b;
     private River r;
     private HeliPad hp;
-    private Fire.FireDispatch fd;
+    private FlightPath fp;
     private static int HELI_FUEL;
     private static int counter = 0;
 
@@ -30,12 +30,16 @@ public class GameWorld {
         HELI_FUEL = 25000;
 
         r = new River(worldSize);
+
         hp = new HeliPad(worldSize);
         nph = new NonPlayerHelicopter(worldSize,r,hp);
         ph = new PlayerHelicopter(worldSize,r,hp);
         goc = new GameObjectCollection();
         f = new Fire();
+
         goc.gameObjectCollection.add(0,null);
+        goc.gameObjectCollection.add(1,null);
+        goc.gameObjectCollection.add(2,null);
         goc.gameObjectCollection.add(hp);
         goc.gameObjectCollection.add(r);
 
@@ -50,7 +54,6 @@ public class GameWorld {
         goc.gameObjectCollection.add(nph);
         goc.gameObjectCollection.add(ph);
         ph.setLabels(HELI_FUEL);
-
         new Fire(goc);
 
     }
@@ -78,10 +81,16 @@ public class GameWorld {
                 f.grow(goc.getFires());
                 b.buildingDamages(f.FireSizes());
             }
-            Fire newf = f.spawnNewFire(goc.getBuildings(),b, f,worldSize);
-            if(newf != null) {
-                f = newf;
-                goc.gameObjectCollection.add(0, f);
+
+            if(f.getIsAFireSelected()) {
+                goc.gameObjectCollection.set(1, new FlightPath(hp,r,
+                        f.getSelectedFire(getFires())));
+            }
+
+            if (f.matchSpawnKey(b)) {
+                f = new Fire(f.spawnNewFire(goc.getBuildings(),b,f),
+                        worldSize);
+                goc.gameObjectCollection.add(2, f);
             }
         }
         whichMenuToDisplay();

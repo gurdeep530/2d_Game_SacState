@@ -14,7 +14,7 @@ import java.util.Random;
 
 import static com.codename1.ui.CN.*;
 
-public class Building extends Fixed implements Drawable {
+public class Building extends Fixed{
 
     private final Random RND = new Random();
     private final int DISP_H;
@@ -26,22 +26,14 @@ public class Building extends Fixed implements Drawable {
     private final static Transform BUILDING_ONE = Transform.makeIdentity();
     private final static Transform BUILDING_TWO = Transform.makeIdentity();
     private final static Transform BUILDING_THREE = Transform.makeIdentity();
-    private final River r;
 
     public Building(int i, Dimension worldSize){
         this.DISP_H = worldSize.getHeight();
         this.DISP_W = worldSize.getWidth();
         setColor(ColorUtil.rgb(255,0,0));
-        r = new River(worldSize);
         createBuildings(i);
     }
 
-    @Override
-    public void draw(Graphics g, Point containerOrigin, Point screenOrigin)
-    {
-        localDraw(g,containerOrigin,screenOrigin);
-        g.resetAffine();
-    }
 
     @Override
     public void localDraw(Graphics g, Point containerOrigin,

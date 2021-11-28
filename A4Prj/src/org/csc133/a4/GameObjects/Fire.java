@@ -7,6 +7,7 @@ import com.codename1.ui.Transform;
 import com.codename1.ui.geom.Dimension;
 import com.codename1.ui.geom.Point;
 import com.codename1.ui.geom.Point2D;
+import org.csc133.a4.Game;
 import org.csc133.a4.Interfaces.Drawable;
 
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import java.util.Random;
 
 import static com.codename1.ui.CN.*;
 
-public class Fire extends Fixed implements Drawable {
+public class Fire extends Fixed{
     private static final ArrayList<Dimension> FIRE_SIZE = new ArrayList<>();
     private static final ArrayList<Integer> RANDOM_NUM = new ArrayList<>();
     private static final ArrayList<Transform> FIRES = new ArrayList<>();
@@ -30,9 +31,14 @@ public class Fire extends Fixed implements Drawable {
     //region FireDispatch
 
     boolean selectionStatus;
+    private static boolean IsAFireSelected = false;
+
+
+
     public class FireDispatch
     {
         private final List<Fire> register = new ArrayList<>();
+        private Fire selectedFire;
 
         public FireDispatch(ArrayList<GameObject> fires)
         {
@@ -50,10 +56,16 @@ public class Fire extends Fixed implements Drawable {
                         selectedFire.myTranslation.getTranslateY()))
                 {
                     fire.selectionStatus = true;
+                    IsAFireSelected = true;
+                    this.selectedFire = fire;
                     break;
                 }
                 fire.selectionStatus = false;
             }
+        }
+        public Fire getSelectedFire(ArrayList<GameObject> Fires)
+        {
+            return (Fire) Fires.get(Fires.indexOf(selectedFire));
         }
 
         public void addToRegister(Fire fire)
@@ -156,6 +168,7 @@ public class Fire extends Fixed implements Drawable {
     {
         fireState = new UnStarted();
         selectionStatus = false;
+
         setDimensions(new Dimension(0,0));
         setColor(ColorUtil.MAGENTA);
 
@@ -166,11 +179,9 @@ public class Fire extends Fixed implements Drawable {
     public Fire(GameObjectCollection goc) {
         fd = new FireDispatch(goc.getFires());
     }
-    public Fire()
-    {
-        spawnNewFireKey = generateSpawnKey();
-    }
+    public Fire() {
 
+    }
     public FireDispatch getFd()
     {
         return fd;
@@ -178,12 +189,6 @@ public class Fire extends Fixed implements Drawable {
 
     //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     //region Drawing
-    @Override
-    public void draw(Graphics g, Point containerOrigin, Point screenOrigin)
-    {
-        localDraw(g,containerOrigin,screenOrigin);
-        g.resetAffine();
-    }
     @Override
     public void localDraw(Graphics g, Point containerOrigin,
                          Point screenOrigin) {
@@ -254,7 +259,7 @@ public class Fire extends Fixed implements Drawable {
     //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     //region Creating Fires
 
-    private static int CHANCE_FOR_NEW_FIRE = 5;
+    private int CHANCE_FOR_NEW_FIRE = 5;
 
     private void startFire(Transform fire) {
         fireState.startFire(fire);
@@ -269,22 +274,33 @@ public class Fire extends Fixed implements Drawable {
         return num;
     }
 
-    public Fire spawnNewFire(ArrayList<GameObject> buildings,Building b, Fire f,
-                             Dimension worldSize){
+    public Fire spawnNewFire(ArrayList<GameObject> buildings,Building b, Fire f)
+    {
 
-        if(matchSpawnKey(generateSpawnKey()))
-        {
-            CHANCE_FOR_NEW_FIRE++;
-            int whichBuilding = RND.nextInt(3);
-            Building building = (Building) buildings.get(whichBuilding);
-            return new Fire(b.setFireInBuilding(f, building), worldSize);
+        int whichBuilding = RND.nextInt(3);
+        Building building = (Building) buildings.get(whichBuilding);
+        return b.setFireInBuilding(f, building);
+
+    }
+    private void generateChancesForNewFire(Building b)
+    {
+        int[] damages = b.getBuildingDamage();
+
+        for(int i = 1; i < damages.length; i++) {
+            if (damages[i] >= 25 && damages[i]<50)
+                CHANCE_FOR_NEW_FIRE = 10;
+            else if(damages[i] >= 50 && damages[i] < 75)
+                CHANCE_FOR_NEW_FIRE = 5;
+            else if(damages[i]>= 75)
+                CHANCE_FOR_NEW_FIRE  = 3;
         }
-        return null;
     }
 
-    private boolean matchSpawnKey(List<Integer> unlockKey)
+    public boolean matchSpawnKey(Building b)
     {
-        return unlockKey.equals(spawnNewFireKey);
+        generateChancesForNewFire(b);
+        spawnNewFireKey = generateSpawnKey();
+        return spawnNewFireKey.equals(generateSpawnKey());
     }
     private List<Integer> generateSpawnKey()
     {
@@ -330,7 +346,13 @@ public class Fire extends Fixed implements Drawable {
                         + go.getDimensionsW() + 50);
         return bounds;
     }
-
+    public Fire getSelectedFire(ArrayList<GameObject> Fires){
+        return fd.getSelectedFire(Fires);
+    }
+    public Boolean getIsAFireSelected()
+    {
+        return IsAFireSelected;
+    }
     public ArrayList<Dimension> FireSizes()
     {
         return FIRE_SIZE;

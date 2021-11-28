@@ -8,7 +8,7 @@ import com.codename1.ui.geom.Point;
 import com.codename1.ui.geom.Point2D;
 import org.csc133.a4.Interfaces.Drawable;
 
-public class River extends Fixed implements Drawable {
+public class River extends Fixed{
     private final int DISP_H;
     private final int DISP_W;
 
@@ -23,12 +23,6 @@ public class River extends Fixed implements Drawable {
         translate(DISP_W/2.0,DISP_H * .33);
     }
 
-    @Override
-    public void draw(Graphics g, Point containerOrigin, Point screenOrigin)
-    {
-        localDraw(g,containerOrigin,screenOrigin);
-        g.resetAffine();
-    }
 
     @Override
     public void localDraw(Graphics g, Point containerOrigin,

@@ -260,7 +260,7 @@ public class Helicopter extends Movable implements Steerable, Drawable {
 
         public void localDraw(Graphics g, Point parentOrigin,
                               Point originScreen) {
-            containerTranslate(g, parentOrigin);
+            containerTranslate(g);
 
             drawBody(g);
             drawTailDetails(g);
@@ -303,7 +303,7 @@ public class Helicopter extends Movable implements Steerable, Drawable {
 
         public void localDraw(Graphics g, Point parentOrigin,
                               Point originScreen) {
-            containerTranslate(g, parentOrigin);
+            containerTranslate(g);
 
             drawRotatorBoxOnLeft(g);
             drawBoxToBladeConnector(g);

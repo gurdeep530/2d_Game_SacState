@@ -40,7 +40,7 @@ public class Arc extends GameObject {
     public void localDraw(Graphics g, Point parentOrigin, Point screenOrigin)
     {
         g.setColor(getColor());
-        containerTranslate(g, parentOrigin);
+        containerTranslate(g);
         g.drawArc(-getDimensionsW()/2,-getDimensionsH()/2,
                     getDimensionsW(), getDimensionsH(),
                     startAngle,arcAngle);

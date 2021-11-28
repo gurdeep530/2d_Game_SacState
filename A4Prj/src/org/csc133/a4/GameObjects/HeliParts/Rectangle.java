@@ -33,7 +33,7 @@ public class Rectangle extends GameObject {
     @Override
     public void localDraw(Graphics g, Point parentOrigin, Point originScreen) {
         g.setColor(getColor());
-        containerTranslate(g, parentOrigin);
+        containerTranslate(g);
         if(fill)
         {
             g.fillRect(-getDimensionsW()/2,-getDimensionsH()/2,

@@ -33,10 +33,10 @@ public class MapView extends Container{
             Point screenOrigin = new Point(getAbsoluteX(),getAbsoluteY());
             if(go instanceof NonPlayerHelicopter) {
                 if (canNPHSpawn)
-                    go.draw(g, parentOrigin, screenOrigin);
+                    go.localDraw(g, parentOrigin, screenOrigin);
             }
             else if(go != null)
-                go.draw(g,parentOrigin, screenOrigin);
+                go.localDraw(g,parentOrigin, screenOrigin);
         }
 
         g.resetAffine();

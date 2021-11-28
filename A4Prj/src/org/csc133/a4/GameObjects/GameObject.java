@@ -9,7 +9,7 @@ import org.csc133.a4.Interfaces.Drawable;
 
 import java.util.ArrayList;
 
-public abstract class GameObject implements Drawable {
+public abstract class GameObject{
 
     final Point2D location;
     int color;
@@ -27,9 +27,14 @@ public abstract class GameObject implements Drawable {
         scale(1,1);
     }
 
-    public Transform getMyTranslation()
+    public int getX()
     {
-        return myTranslation;
+        return (int) myTranslation.getTranslateX();
+    }
+
+    public int getY()
+    {
+        return (int) myTranslation.getTranslateY();
     }
 
     public void setColor(int color)
@@ -61,12 +66,6 @@ public abstract class GameObject implements Drawable {
     public void setDimensions(Dimension newDim) {
         dimension.setWidth(newDim.getWidth());
         dimension.setHeight(newDim.getHeight());
-    }
-
-    @Override
-    public void draw(Graphics g, Point containerOrigin, Point originScreen)
-    {
-
     }
 
     abstract public void localDraw(Graphics g, Point containerOrigin,
@@ -114,7 +113,7 @@ public abstract class GameObject implements Drawable {
         g.setTransform(gXForm);
     }
 
-    protected void containerTranslate(Graphics g, Point parentOrigin)
+    protected void containerTranslate(Graphics g)
     {
         Transform gxForm = Transform.makeIdentity();
         g.getTransform(gxForm);

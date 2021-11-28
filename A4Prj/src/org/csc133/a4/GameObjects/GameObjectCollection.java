@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-public class GameObjectCollection {
+public class GameObjectCollection{
 
     public List<GameObject> gameObjectCollection;
 
@@ -13,7 +13,6 @@ public class GameObjectCollection {
     {
         gameObjectCollection = new ArrayList<>();
     }
-
 
     public ArrayList<GameObject> getFires() {
         return (ArrayList<GameObject>) gameObjectCollection.stream()

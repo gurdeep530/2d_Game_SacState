@@ -96,7 +96,7 @@ public class Fire extends Fixed{
         }
         protected void startFire(Transform fire){}
         protected void grow(ArrayList<GameObject> gameObjects){}
-        protected void shrink(GameObject go, int water){}
+        protected GameObject shrink(GameObject go, int water){return null;}
         protected Boolean areAllFiresOut(){
             boolean firesAreOut = false;
             for(Dimension dim : FIRE_SIZE)
@@ -127,18 +127,20 @@ public class Fire extends Fixed{
     //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     private class Burning extends FireState {
         @Override
-        public void shrink(GameObject go, int water) {
+        public GameObject shrink(GameObject go, int water) {
 
             int i = whichFireIsMapViewTryingToDraw(go.myTranslation);
 
-            FIRE_SIZE.get(i).setWidth(FIRE_SIZE.get(i).getWidth() - (water / 5));
 
+            FIRE_SIZE.get(i).setWidth(FIRE_SIZE.get(i).getWidth() - (water / 5));
             if(FIRE_SIZE.get(i).getWidth() <= 0) {
                 FIRE_SIZE.get(i).setWidth(0);
                 if(areAllFiresOut()) {
                     getFire().changeState(new Extinguished());
                 }
             }
+            go.dimension.setWidth(FIRE_SIZE.get(i).getWidth());
+            return go;
         }
         @Override
         protected void grow(ArrayList<GameObject> gameObjects) {
@@ -286,13 +288,17 @@ public class Fire extends Fixed{
     {
         int[] damages = b.getBuildingDamage();
 
-        for(int i = 1; i < damages.length; i++) {
-            if (damages[i] >= 25 && damages[i]<50)
-                CHANCE_FOR_NEW_FIRE = 10;
-            else if(damages[i] >= 50 && damages[i] < 75)
-                CHANCE_FOR_NEW_FIRE = 5;
-            else if(damages[i]>= 75)
-                CHANCE_FOR_NEW_FIRE  = 3;
+        if(!areFiresOut()) {
+            for (int i = 1; i < damages.length; i++) {
+                if(damages[i] < 25 )
+                    CHANCE_FOR_NEW_FIRE = 100;
+                else if (damages[i] >= 25 && damages[i] < 50)
+                    CHANCE_FOR_NEW_FIRE = 10;
+                else if (damages[i] >= 50 && damages[i] < 75)
+                    CHANCE_FOR_NEW_FIRE = 7;
+                else if (damages[i] >= 75)
+                    CHANCE_FOR_NEW_FIRE = 5;
+            }
         }
     }
 
@@ -361,8 +367,8 @@ public class Fire extends Fixed{
     //endregion
     //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     //region Behavior
-    public void shrink(GameObject go, int water) {
-        fireState.shrink(go,water);
+    public GameObject shrink(GameObject go, int water) {
+        return fireState.shrink(go,water);
     }
 
     public void grow(ArrayList<GameObject> gameObjects) {

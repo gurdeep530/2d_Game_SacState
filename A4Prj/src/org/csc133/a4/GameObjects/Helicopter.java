@@ -63,7 +63,8 @@ public class Helicopter extends Movable implements Steerable, Drawable {
             return fuel;
         }
         protected void drink(){}
-        protected void fight(Fire fire, ArrayList<GameObject> GameObjects){}
+        protected GameObject fight(Fire fire, ArrayList<GameObject> GameObjects)
+        {return null;}
         protected boolean hasLandedAt()
         {
             return false;
@@ -190,15 +191,16 @@ public class Helicopter extends Movable implements Steerable, Drawable {
             }
         }
         @Override
-        protected void fight(Fire fire, ArrayList<GameObject> gameObjects)
+        protected GameObject fight(Fire fire, ArrayList<GameObject> gameObjects)
         {
             for(GameObject go: gameObjects) {
                 if (IsHeliOverFire(fire.getFireBounds(go))) {
-                        fire.shrink(go, water);
+                        fire = (Fire) fire.shrink(go, water);
                         break;
                 }
             }
             water = 0;
+            return fire;
         }
         @Override
         protected int consumeFuel(int fuel)

@@ -20,6 +20,7 @@ public class GameWorld {
     private FlightPath fp;
     private static int HELI_FUEL;
     private static int counter = 0;
+    public static boolean canNPHSpawn = false;
 
     public GameWorld(){
         worldSize = new Dimension();
@@ -30,10 +31,11 @@ public class GameWorld {
         HELI_FUEL = 25000;
 
         r = new River(worldSize);
-
         hp = new HeliPad(worldSize);
         nph = new NonPlayerHelicopter(worldSize,r,hp);
         ph = new PlayerHelicopter(worldSize,r,hp);
+        ph.setUpHelicopter();
+        nph.setUpHelicopter();
         goc = new GameObjectCollection();
         f = new Fire();
 
@@ -55,7 +57,6 @@ public class GameWorld {
         goc.gameObjectCollection.add(ph);
         ph.setLabels(HELI_FUEL);
         new Fire(goc);
-
     }
 
     public void quit() {
@@ -69,11 +70,12 @@ public class GameWorld {
 
             ph.setLabels(HELI_FUEL);
 
-            ph.setHeliLocation();
+            ph.updateHeli();
 
-            goc.gameObjectCollection.set(goc.gameObjectCollection.size()-1,
-                                        new PlayerHelicopter(worldSize,r,hp));
-
+            if(canNPHSpawn) {
+                nph.setHeliLocation();
+                nph.updateHeli();
+            }
             ticker++;
 
             if ((ticker == 30)) {
@@ -241,11 +243,11 @@ public class GameWorld {
     }
     public int getSpeedForGlassCockpit()
     {
-        return ph.Speed();
+        return ph.getSpeed();
     }
     public int getHeadingForGlassCockpit()
     {
-        return ph.Heading();
+        return ph.getHeading();
     }
     public int getFuelGlassCockpit()
     {

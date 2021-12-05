@@ -12,9 +12,18 @@ public class FlightPath extends GameObject{
 
     //region BezierCurve Class
     static class BezierCurve{
+        ArrayList<Point2D> controlPoints;
+        public BezierCurve(ArrayList<Point2D> controlPoints)
+        {
+            this.controlPoints = controlPoints;
+        }
 
-        private void drawBezierCurve(Graphics g,
-                                    ArrayList<Point2D> controlPoints)
+        public Point2D getStartControlPoint()
+        {
+            return controlPoints.get(0);
+        }
+
+        private void drawBezierCurve(Graphics g)
         {
             g.setColor(ColorUtil.WHITE);
             for(Point2D p: controlPoints)
@@ -23,19 +32,9 @@ public class FlightPath extends GameObject{
             double t = 0;
             float smallFloatIncrement = .01f;
             Point2D currentPoint = controlPoints.get(0);
+
             while(t<1){
-                Point2D nextPoint = new Point2D(0,0);
-                int d = controlPoints.size()-1;
-
-                for(int i = 0; i<controlPoints.size(); i++)
-                {
-                    double b = BernsteinD(d,i,t);
-                    double mx = b * controlPoints.get(i).getX();
-                    double my = b * controlPoints.get(i).getY();
-
-                    nextPoint.setX(nextPoint.getX() + mx);
-                    nextPoint.setY(nextPoint.getY() + my);
-                }
+                Point2D nextPoint = evaluateCurve(t);
 
                 g.drawLine( (int) currentPoint.getX(),
                             (int) currentPoint.getY(),
@@ -46,6 +45,19 @@ public class FlightPath extends GameObject{
                 t = t + smallFloatIncrement;
             }
 
+        }
+
+        private Point2D evaluateCurve(double t){
+            Point2D p = new Point2D(0,0);
+            int d = controlPoints.size() - 1;
+            for(int i = 0; i<controlPoints.size(); i++)
+            {
+                p.setX(p.getX() + BernsteinD(d,i,t)
+                        * controlPoints.get(i).getX());
+                p.setY(p.getY() + BernsteinD(d,i,t)
+                        * controlPoints.get(i).getY());
+            }
+            return p;
         }
 
         private double BernsteinD(int d, int i, double t)
@@ -66,25 +78,25 @@ public class FlightPath extends GameObject{
 
     //region FlightPath Class
 
-    private final BezierCurve bc;
-    private final ArrayList<Point2D> controlPointsToGetWater;
-    private final ArrayList<Point2D> controlPointsToSelectedFire;
-    private final ArrayList<Point2D> controlPointsToReturnToRiver;
+    private final BezierCurve pathToSelectedFire;
+    private final BezierCurve pathToWater;
+    private final BezierCurve pathToReturnToRiver;
 
     public FlightPath(HeliPad hp, River r, Fire selectedFire)
     {
-        this.bc = new BezierCurve();
-        controlPointsToGetWater = pathToFiverFromHelipad(hp,r);
-        controlPointsToSelectedFire = pathToSelectedFire(hp,r,selectedFire);
-        controlPointsToReturnToRiver = pathToReturnToRiver(r,selectedFire);
+        this.pathToWater = new BezierCurve(pathToRiverFromHelipad(hp,r));
+        this.pathToSelectedFire = new BezierCurve(pathToSelectedFire(hp,r,
+                selectedFire));
+        this.pathToReturnToRiver = new BezierCurve(pathToReturnToRiver(r,
+                selectedFire));
     }
     @Override
     public void localDraw(Graphics g, Point containerOrigin, Point originScreen)
     {
         containerTranslate(g);
-        bc.drawBezierCurve(g, controlPointsToGetWater);
-        bc.drawBezierCurve(g, controlPointsToSelectedFire);
-        bc.drawBezierCurve(g ,controlPointsToReturnToRiver);
+        pathToWater.drawBezierCurve(g);
+        pathToSelectedFire.drawBezierCurve(g);
+        pathToReturnToRiver.drawBezierCurve(g);
         g.resetAffine();
     }
 
@@ -109,7 +121,7 @@ public class FlightPath extends GameObject{
 
         return controlPoints;
     }
-    private ArrayList<Point2D> pathToFiverFromHelipad(HeliPad hp, River r)
+    private ArrayList<Point2D> pathToRiverFromHelipad(HeliPad hp, River r)
     {
         ArrayList<Point2D> controlPoints = new ArrayList<>();
         controlPoints.add(new Point2D(hp.getX(), hp.getY()));

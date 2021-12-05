@@ -14,7 +14,7 @@ public class MapView extends Container{
 
     GameWorld gw;
     private static int counter = 0;
-    private static boolean canNPHSpawn = false;
+
 
 
     public MapView(GameWorld gw)
@@ -32,11 +32,12 @@ public class MapView extends Container{
             Point parentOrigin = new Point(this.getX(), this.getY());
             Point screenOrigin = new Point(getAbsoluteX(),getAbsoluteY());
             if(go instanceof NonPlayerHelicopter) {
-                if (canNPHSpawn)
+                if (GameWorld.canNPHSpawn)
                     go.localDraw(g, parentOrigin, screenOrigin);
             }
             else if(go != null)
                 go.localDraw(g,parentOrigin, screenOrigin);
+
         }
 
         g.resetAffine();
@@ -61,7 +62,7 @@ public class MapView extends Container{
             if(go.IsPointInsideBounds(gw.getFireForMapview().getFireBounds(go),
                     mouseClick.getX(), mouseClick.getY()))
             {
-                canNPHSpawn = true;
+                GameWorld.canNPHSpawn = true;
                 gw.FireDispatchSelector((Fire) go);
             }
         }

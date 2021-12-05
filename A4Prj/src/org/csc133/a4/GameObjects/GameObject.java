@@ -77,7 +77,7 @@ public abstract class GameObject{
     protected void scale(double sx, double sy) {
         myScale.scale((float)sx, (float)sy);
     }
-    protected void translate(double tx, double ty) {
+    public void translate(double tx, double ty) {
         myTranslation.translate((float)tx, (float)ty);
     }
 

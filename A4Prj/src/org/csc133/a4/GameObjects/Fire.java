@@ -7,8 +7,6 @@ import com.codename1.ui.Transform;
 import com.codename1.ui.geom.Dimension;
 import com.codename1.ui.geom.Point;
 import com.codename1.ui.geom.Point2D;
-import org.csc133.a4.Game;
-import org.csc133.a4.Interfaces.Drawable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -230,7 +228,6 @@ public class Fire extends Fixed{
                 FIRE_SIZE.get(whichFire).getWidth(),
                 FIRE_SIZE.get(whichFire).getWidth(),
                 0, 360);
-
     }
     private void drawFireLabel(Graphics g, int whichFire)
     {
@@ -332,24 +329,30 @@ public class Fire extends Fixed{
         Point2D[] bounds = new Point2D[4];
 
         //top left point
-        bounds[0] = new Point2D(go.myTranslation.getTranslateX() - 50,
-                go.myTranslation.getTranslateY() - 50);
+        bounds[0] =
+                new Point2D((go.myTranslation.getTranslateX()
+                        - go.getDimensionsW() / 2f) - 25,
+                        (go.myTranslation.getTranslateY()
+                                - go.getDimensionsW() / 2f) - 25);
 
         //top right point
-        bounds[1] = new Point2D(go.myTranslation.getTranslateX()
-                + go.getDimensionsW() + 50,
-                go.myTranslation.getTranslateY() - 50);
+        bounds[1] = new Point2D((go.myTranslation.getTranslateX()
+                + go.getDimensionsW() / 2f) + 25,
+                (go.myTranslation.getTranslateY()
+                        - go.getDimensionsW() / 2f) - 25);
 
         //bottom left
-        bounds[2] = new Point2D(go.myTranslation.getTranslateX() - 50,
-                go.myTranslation.getTranslateY()
-                        + go.getDimensionsW() + 50);
+        bounds[2] =
+                new Point2D((go.myTranslation.getTranslateX()
+                        - go.getDimensionsW() / 2f) - 25,
+                        (go.myTranslation.getTranslateY()
+                                + go.getDimensionsW() / 2f) + 25);
 
         //bottom right
-        bounds[3] = new Point2D(go.myTranslation.getTranslateX()
-                + go.getDimensionsW() + 50,
-                go.myTranslation.getTranslateY()
-                        + go.getDimensionsW() + 50);
+        bounds[3] = new Point2D((go.myTranslation.getTranslateX()
+                + go.getDimensionsW() / 2f) + 25,
+                (go.myTranslation.getTranslateY()
+                        + go.getDimensionsW() / 2f) + 25);
         return bounds;
     }
     public Fire getSelectedFire(ArrayList<GameObject> Fires){

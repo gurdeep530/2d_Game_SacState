@@ -8,27 +8,27 @@ import com.codename1.ui.geom.Point;
 import com.codename1.ui.geom.Point2D;
 import org.csc133.a4.GameObjects.HeliParts.Arc;
 import org.csc133.a4.GameObjects.HeliParts.Rectangle;
-import org.csc133.a4.Interfaces.Drawable;
 import org.csc133.a4.Interfaces.Steerable;
 
-import java.awt.*;
 import java.util.ArrayList;
 
 import static com.codename1.ui.CN.*;
 
-public class Helicopter extends Movable implements Steerable, Drawable {
+public class Helicopter extends Movable implements Steerable {
 
     private static final String[] HELI_LABELS = new String[2];
     private final HeliPad hp;
     private final River r;
     public int MAX_SPEED = 10;
+    private ArrayList<GameObject> heliParts;
+    private HeliBladeLeft heliBladeLeft;
+    private HeliBladeRight heliBladeRight;
+    private float rotationSpeed;
+    private int water;
+    public int HELI_TRANS_X, HELI_TRANS_Y;
     private final int DISP_H;
     private final int DISP_W;
-    private ArrayList<GameObject> heliParts;
-    private HeliBlade heliBlade;
-    private static float rotationSpeed;
-    private static int water;
-    private static int HELI_TRANS_X, HELI_TRANS_Y;
+    private int oldHeading = 0;
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     //region Helicopter State Pattern
@@ -80,7 +80,7 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         }
         @Override
         protected boolean hasLandedAt() {
-            return IsHeliOverHeliPad() && Speed() == 0;
+            return IsHeliOverHeliPad() && getSpeed() == 0;
         }
 
     }
@@ -101,7 +101,8 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         {
             while(rotationSpeed != -10) {
                 rotationSpeed--;
-                updateLocalTransforms();
+                heliBladeRight.updateLocalTransform(rotationSpeed);
+                heliBladeLeft.updateLocalTransform(rotationSpeed);
             }
         }
         @Override
@@ -137,13 +138,14 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         {
             while(rotationSpeed != 0) {
                 rotationSpeed++;
-                updateLocalTransforms();
+                heliBladeLeft.updateLocalTransform(rotationSpeed);
+                heliBladeRight.updateLocalTransform(rotationSpeed);
             }
             getHeli().changeState(new Off());
         }
         @Override
         protected void decelerate() {
-            if(Speed() == 0)
+            if(getSpeed() == 0)
                 getHeli().changeState(new Off());
         }
     }
@@ -153,7 +155,7 @@ public class Helicopter extends Movable implements Steerable, Drawable {
 
         @Override
         protected void startOrStopEngine() {
-            if(Speed() == 0)
+            if(getSpeed() == 0)
                 getHeli().changeState(new Stopping());
             else {
                 getHeli().changeState(new Ready());
@@ -172,18 +174,18 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         @Override
         protected void accelerate()
         {
-            if (Speed() < MAX_SPEED)
+            if (getSpeed() < MAX_SPEED)
                 ChangeSpeed(1);
         }
         @Override
         protected void decelerate() {
-            if (Speed() > 0)
+            if (getSpeed() > 0)
                 ChangeSpeed(-1);
         }
         @Override
         protected void drink()
         {
-            if (Speed() < 2
+            if (getSpeed() < 2
                     && water != 1000
                     && IsHeliOverRiver())
             {
@@ -207,12 +209,12 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         {
             if(fuel < 0)
                 fuel = 0;
-            else if(Speed() == 0)
+            else if(getSpeed() == 0)
             {
                 fuel -= .5;
             }
             else
-                fuel -= (int) Math.pow(Speed(), 2);
+                fuel -= (int) Math.pow(getSpeed(), 2);
 
             return fuel;
         }
@@ -421,24 +423,38 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     private final static int BLADE_WIDTH = 25;
     private final static int BLADE_LENGTH = BUBBLE_RADIUS;
-    private static int rotation = 1;
-    private static class HeliBlade extends Rectangle {
+    private static class HeliBladeLeft extends Rectangle
+    {
 
-        public HeliBlade() {
+        public HeliBladeLeft() {
             super(  ColorUtil.GRAY,
                     BLADE_WIDTH,
-                    BLADE_LENGTH*5,
+                    BLADE_LENGTH*3,
                     0,ENGINE_BLOCK_H*3.75f,
                     1,1,
-                    rotation,
+                    42,
                     true);
         }
-
         public void updateLocalTransform(double rotationSpeed) {
-            if(rotationSpeed != 0)
-                rotation += (3 * rotationSpeed);
+            this.rotate(-rotationSpeed);
         }
     }
+    private static class HeliBladeRight extends Rectangle
+    {
+        public HeliBladeRight() {
+            super(  ColorUtil.GRAY,
+                    BLADE_WIDTH,
+                    BLADE_LENGTH *3,
+                    0,ENGINE_BLOCK_H*3.75f,
+                    1,-1,
+                    42,
+                    true);
+        }
+        public void updateLocalTransform(double rotationSpeed) {
+            this.rotate(-rotationSpeed);
+        }
+    }
+
     //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     final static int SHAFT_WIDTH = 12;
     final static int SHAFT_HEIGHT = 12;
@@ -461,14 +477,15 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     //region Helicopter
 
-    public Helicopter(int bubbleColor, int engineColor,Dimension worldSize,
+    public Helicopter(int bubbleColor,
+                      int engineColor,
+                      Dimension worldSize,
                       River river,
                       HeliPad heliPad) {
         hp = heliPad;
         r = river;
         DISP_W = worldSize.getWidth();
         DISP_H = worldSize.getHeight();
-
         setUpHelicopter();
         heliState = new Off();
         heliParts = addAllHeliParts(bubbleColor,engineColor);
@@ -477,16 +494,6 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     }
     //.......................................................................
     //region Drawing
-
-    @Override
-    public void draw(Graphics g, Point containerOrigin,
-                         Point originScreen) {
-        g.setColor(color);
-
-        localDraw(g,containerOrigin,originScreen);
-
-        g.resetAffine();
-    }
 
     @Override
     public void localDraw(Graphics g, Point containerOrigin,
@@ -498,6 +505,7 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         }
 
         drawFuelAndWaterLabels(g);
+        g.resetAffine();
     }
     private void drawFuelAndWaterLabels(Graphics g) {
 
@@ -505,7 +513,7 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         g.setFont(f);
         g.setColor(ColorUtil.YELLOW);
         Transform labelForm = Transform.makeIdentity();
-        labelForm.setTranslation(   (int)myTranslation.getTranslateX(),
+        labelForm.setTranslation((int)myTranslation.getTranslateX(),
                 (int)myTranslation.getTranslateY() + 150);
 
         g.setTransform(labelForm);
@@ -514,9 +522,22 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         g.drawString(HELI_LABELS[1],0, 30);
 
     }
+    public void updateHeli()
+    {
+        HELI_TRANS_X = -Move()[1];
+        HELI_TRANS_Y = -Move()[0];
+        translate(HELI_TRANS_X, HELI_TRANS_Y);
+
+        if(oldHeading != getHeading() || getHeading() == 0) {
+            rotate(-getHeading() + oldHeading);
+            oldHeading = getHeading();
+        }
+        updateLocalTransforms();
+    }
 
     public void updateLocalTransforms() {
-        heliBlade.updateLocalTransform(rotationSpeed);
+        heliBladeRight.updateLocalTransform(rotationSpeed);
+        heliBladeLeft.updateLocalTransform(rotationSpeed);
     }
     //endregion
     //.........................................................................
@@ -534,32 +555,33 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         heliParts.add(new HeliLeftSkid());
         heliParts.add(new HeliLeftTopSkidConnector());
         heliParts.add(new HeliLeftBottomSkidConnector());
-        heliBlade = new HeliBlade();
-        heliParts.add(heliBlade);
+        heliBladeLeft = new HeliBladeLeft();
+        heliBladeRight = new HeliBladeRight();
+        heliParts.add(heliBladeLeft);
+        heliParts.add(heliBladeRight);
         heliParts.add(new HeliShaft());
 
         return heliParts;
 
     }
 
-    void setUpHelicopter()
+    public void setUpHelicopter()
     {
         setHeliLocation();
-        translate( HELI_TRANS_X , HELI_TRANS_Y);
-        scale(.25f, .25f);
-        rotate(-Heading());
+        translate(HELI_TRANS_X, HELI_TRANS_Y);
+        scale(.5f, .5f);
+        rotate(-getHeading());
     }
     public void setHeliLocation() {
-
-        HELI_TRANS_X = (int) (DISP_W / 2.0) -Move()[1];
-        HELI_TRANS_Y = (int) (DISP_H - (DISP_H - (DISP_H * .92)))
-                                - Move()[0];
+        HELI_TRANS_X = (int) (DISP_W / 2.0);
+        HELI_TRANS_Y = (int) (DISP_H - (DISP_H - (DISP_H * .92)));
     }
 
     public void setLabels(int fuel) {
         HELI_LABELS[0] = ("F: " + fuel);
         HELI_LABELS[1] = ("W: " + water);
     }
+
     //endregion
     //..........................................................................
     //region Checks for if heli is over the River and fire.
@@ -567,21 +589,21 @@ public class Helicopter extends Movable implements Steerable, Drawable {
         Point2D[] riverBounds;
         riverBounds = r.getRiverBounds();
 
-        return ((HELI_TRANS_Y <= riverBounds[0].getY())
-                && (HELI_TRANS_Y >= riverBounds[2].getY()));
+        return (getY() <= riverBounds[0].getY())
+                && (getY() >= riverBounds[2].getY());
     }
 
     public boolean IsHeliOverFire(Point2D[] bounds) {
 
-        return IsPointInsideBounds(bounds,HELI_TRANS_X,HELI_TRANS_Y);
+        return IsPointInsideBounds(bounds, getX(), getY());
 
     }
 
     public boolean IsHeliOverHeliPad() {
         Point2D[] circleBounds = hp.CircleBounds();
 
-        return Speed() == 0
-                && IsPointInsideBounds(circleBounds, HELI_TRANS_X,HELI_TRANS_Y);
+        return getSpeed() == 0
+                && IsPointInsideBounds(circleBounds, getX(), getY());
     }
     //endregion
     //..........................................................................
@@ -621,6 +643,7 @@ public class Helicopter extends Movable implements Steerable, Drawable {
     {
         return heliState.hasLandedAt();
     }
+
     //endregion
 
     //endregion

@@ -276,30 +276,25 @@ public class Fire extends Fixed{
         return num;
     }
 
-    public Fire spawnNewFire(ArrayList<GameObject> buildings,Building b, Fire f)
+    public Fire spawnNewFire(Building b, Fire f)
     {
 
-        int whichBuilding = RND.nextInt(3);
-        Building building = (Building) buildings.get(whichBuilding);
-        return b.setFireInBuilding(f, building);
+        return b.setFireInBuilding(f);
 
     }
     private void generateChancesForNewFire(Building b)
     {
-        int[] damages = b.getBuildingDamage();
-
         if(!areFiresOut()) {
-            for (int i = 1; i < damages.length; i++) {
-                if(damages[i] < 25 )
+            if (b.getBuildingDamage() < 25)
                     CHANCE_FOR_NEW_FIRE = 100;
-                else if (damages[i] >= 25 && damages[i] < 50)
+            else if (b.getBuildingDamage() >= 25 && b.getBuildingDamage() < 50)
                     CHANCE_FOR_NEW_FIRE = 10;
-                else if (damages[i] >= 50 && damages[i] < 75)
-                    CHANCE_FOR_NEW_FIRE = 7;
-                else if (damages[i] >= 75)
+            else if (b.getBuildingDamage() >= 50 && b.getBuildingDamage() < 75)
+                    CHANCE_FOR_NEW_FIRE = 6;
+            else if (b.getBuildingDamage() >= 75)
                     CHANCE_FOR_NEW_FIRE = 5;
-            }
         }
+
     }
 
     public boolean matchSpawnKey(Building b)

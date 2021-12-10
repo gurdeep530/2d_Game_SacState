@@ -147,7 +147,7 @@ public abstract class GameObject{
         return (bounds[0].getX() <= xValue)
                 && (bounds[1].getY() <= yValue)
                 && (bounds[1].getX() >= xValue)
-                && ((bounds[2].getY() >= yValue));
+                 && ((bounds[2].getY() >= yValue));
     }
 
     public boolean PointMatch(float xValue, float yValue, float xValue2,
@@ -155,6 +155,5 @@ public abstract class GameObject{
     {
         return (xValue == xValue2) && (yValue == yValue2);
     }
-
 
 }

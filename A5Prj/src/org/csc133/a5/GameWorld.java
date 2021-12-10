@@ -46,7 +46,7 @@ public class GameWorld {
             b = new Building(i, worldSize);
             goc.gameObjectCollection.add(b);
             for (int j = 0; j < 3; j++) {
-                f = new Fire(b.setFireInBuilding(f,b), worldSize);
+                f = new Fire(b.setFireInBuilding(f), worldSize);
                 goc.gameObjectCollection.add(f);
             }
         }
@@ -76,7 +76,10 @@ public class GameWorld {
             if ((ticker == 30)) {
                 ticker = 0;
                 f.grow(goc.getFires());
-                b.buildingDamages(f.FireSizes());
+                for(GameObject go : goc.getBuildings()) {
+                    b = (Building) go;
+                    b.buildingDamages(goc.getFires());
+                }
             }
 
             if(f.getIsAFireSelected()) {
@@ -91,10 +94,13 @@ public class GameWorld {
                     fp.updateFlightPath(hp,r,f.getSelectedFire(getFires()));
             }
 
-            if (f.matchSpawnKey(b)) {
-                f = new Fire(f.spawnNewFire(goc.getBuildings(),b,f),
+            for(GameObject go : goc.getBuildings()){
+                    b = (Building) go;
+                    if (f.matchSpawnKey(b)) {
+                        f = new Fire(f.spawnNewFire(b, f),
                         worldSize);
-                goc.gameObjectCollection.add(2, f);
+                        goc.gameObjectCollection.add(2, f);
+            }
             }
         }
         whichMenuToDisplay();
@@ -258,10 +264,9 @@ public class GameWorld {
     public int getDamagesForGlassCockpit()
     {
         int totalDam = 0;
-        int[] Dams = b.getBuildingDamage();
-        for(int i = 1; i<= 3; i++)
-        {
-            totalDam += Dams[i];
+        for(GameObject go : goc.getBuildings()){
+            b = (Building) go;
+            totalDam += b.getBuildingDamage();
         }
         totalDam = totalDam/3;
 
@@ -273,10 +278,9 @@ public class GameWorld {
     public int getLossesForGlassCockpit()
     {
         int totalLoss = 0;
-        int[] Values = b.getBuildingValue();
-        for(int i = 1; i<= 3; i++)
-        {
-            totalLoss += Values[i];
+        for(GameObject go : goc.getBuildings()){
+            b = (Building) go;
+            totalLoss += b.getBuildingValue();
         }
         totalLoss = (totalLoss * getDamagesForGlassCockpit()) /100;
 

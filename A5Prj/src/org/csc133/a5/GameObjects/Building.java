@@ -7,7 +7,6 @@ import com.codename1.ui.Transform;
 import com.codename1.ui.geom.Dimension;
 import com.codename1.ui.geom.Point;
 import com.codename1.ui.geom.Point2D;
-import org.csc133.a5.Interfaces.Drawable;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -19,17 +18,19 @@ public class Building extends Fixed {
     private final Random RND = new Random();
     private final int DISP_H;
     private final int DISP_W;
-    private final static int[] buildingDamage = new int[3];
-    private final static Dimension[] BUILDING_DIM = new Dimension[4];
-    private final static int[] BUILDING_VALUE = new int[4];
-    private final static int[] BUILDING_DAMAGE = new int[4];
-    private final static Transform BUILDING_ONE = Transform.makeIdentity();
-    private final static Transform BUILDING_TWO = Transform.makeIdentity();
-    private final static Transform BUILDING_THREE = Transform.makeIdentity();
+    private int buildingDamage;
+    private Dimension BUILDING_DIM;
+    private int damage;
+    private int value;
+    private final Transform BUILDING;
 
     public Building(int i, Dimension worldSize) {
         this.DISP_H = worldSize.getHeight();
         this.DISP_W = worldSize.getWidth();
+        BUILDING = Transform.makeIdentity();
+        BUILDING_DIM = new Dimension(0,0);
+        damage = 0;
+        value = 0;
         setColor(ColorUtil.rgb(255, 0, 0));
         createBuildings(i);
     }
@@ -60,8 +61,8 @@ public class Building extends Fixed {
         g.resetAffine();
     }
 
-    public Fire setFireInBuilding(Fire fire, Building b) {
-        Point2D[] bounds = getBuildingBounds(b);
+    public Fire setFireInBuilding(Fire fire) {
+        Point2D[] bounds = getBuildingBounds();
 
         int xBound = (int) (RND.nextInt(
                 (int) ((bounds[1].getX()) - bounds[0].getX()))
@@ -74,52 +75,47 @@ public class Building extends Fixed {
         return fire;
     }
 
-    public void buildingDamages(ArrayList<Dimension> sizes) {
-
-        int whichBuilding = 0;
-        int i = 0;
-        int nextThree = 3;
-        while (i < nextThree) {
-            buildingDamage[whichBuilding]
-                    += Math.pow(sizes.get(i).getWidth(), 2);
-            i++;
-            if (i == 3 || i == 6 && nextThree != 9) {
-                nextThree += 3;
-                whichBuilding += 1;
-            }
+    public void buildingDamages(ArrayList<GameObject> fires) {
+        Point2D[] bounds = getBuildingBounds();
+        for (GameObject fire : fires) {
+            if (bounds[0].getX() <= fire.getX()
+                && (bounds[1].getY() >= fire.getY())
+                    && (bounds[1].getX() >= fire.getX())
+                    && ((bounds[2].getY() <= fire.getY())))
+                buildingDamage += Math.pow(fire.getDimensionsW(), 2);
         }
+
         setBuildingDamage();
     }
 
-    public int[] getBuildingValue() {
-        return BUILDING_VALUE;
+    public int getBuildingValue() {
+        return value;
     }
 
-    public int[] getBuildingDamage() {
-        return BUILDING_DAMAGE;
+    public int getBuildingDamage(){
+        return damage;
     }
-
-    Point2D[] getBuildingBounds(Building b) {
+    Point2D[] getBuildingBounds() {
         Point2D[] bounds = new Point2D[4];
 
         //top left
         bounds[0] = new Point2D(
-                b.myTranslation.getTranslateX() - (b.getDimensionsW() / 2.0),
-                b.myTranslation.getTranslateY() + (b.getDimensionsH() / 2.0));
+                myTranslation.getTranslateX() - (getDimensionsW() / 2.0),
+                myTranslation.getTranslateY() + (getDimensionsH() / 2.0));
 
         //top right
         bounds[1] = new Point2D(
-                b.myTranslation.getTranslateX() + (b.getDimensionsW() / 2.0),
-                b.myTranslation.getTranslateY() + (b.getDimensionsH() / 2.0));
+                myTranslation.getTranslateX() + (getDimensionsW() / 2.0),
+                myTranslation.getTranslateY() + (getDimensionsH() / 2.0));
         //bottom left
         bounds[2] = new Point2D(
-                b.myTranslation.getTranslateX() - (b.getDimensionsW() / 2.0),
-                b.myTranslation.getTranslateY() - (b.getDimensionsH() / 2.0));
+                myTranslation.getTranslateX() - (getDimensionsW() / 2.0),
+                myTranslation.getTranslateY() - (getDimensionsH() / 2.0));
 
         //bottom right
         bounds[3] = new Point2D(
-                b.myTranslation.getTranslateX() + (b.getDimensionsW() / 2.0),
-                b.myTranslation.getTranslateY() - (b.getDimensionsH() / 2.0));
+                myTranslation.getTranslateX() + (getDimensionsW() / 2.0),
+                myTranslation.getTranslateY() - (getDimensionsH() / 2.0));
 
         return bounds;
     }
@@ -136,44 +132,19 @@ public class Building extends Fixed {
 
     }
 
-    private Transform getBuildingTransform(int whichBuilding) {
-        Transform transform = Transform.makeIdentity();
 
-        if (whichBuilding == 1)
-            transform = BUILDING_ONE;
-        else if (whichBuilding == 2)
-            transform = BUILDING_TWO;
-        else if (whichBuilding == 3)
-            transform = BUILDING_THREE;
-
-        return transform;
-    }
-
-    private int whichBuildingIsMapViewTryingToDraw() {
-        int whichBuilding = 0;
-        for (int i = 1; i <= 3; i++) {
-            if (getDimensionsW() == BUILDING_DIM[i].getWidth()
-                    && getDimensionsH() == BUILDING_DIM[i].getHeight()) {
-                whichBuilding = i;
-                getBuildingTransform(whichBuilding).setTranslation
-                        (myTranslation.getTranslateX(),
-                                myTranslation.getTranslateY());
-            }
-        }
-        return whichBuilding;
-    }
 
     private void createTheBuildingAboveRiver() {
         int RANDOM_NUM = (RND.nextInt(700 - 300) + 300);
 
         setDimensions((DISP_W - RANDOM_NUM), ((int) ((DISP_H * .2) / 2)));
 
-        BUILDING_DIM[1] = new Dimension(getDimensionsW(), getDimensionsH());
+        BUILDING_DIM = new Dimension(getDimensionsW(), getDimensionsH());
         RANDOM_NUM = RND.nextInt(1000 - 100) + 100;
-        BUILDING_VALUE[1] = RANDOM_NUM;
+        value = RANDOM_NUM;
 
         translate(DISP_W / 2.0, DISP_H * .20);
-        BUILDING_ONE.setTranslation(myTranslation.getTranslateX(),
+        BUILDING.setTranslation(myTranslation.getTranslateX(),
                 myTranslation.getTranslateY());
     }
 
@@ -182,60 +153,45 @@ public class Building extends Fixed {
 
         setDimensions((int) (DISP_W / 8.0), ((DISP_H) / RANDOM_NUM));
 
-        BUILDING_DIM[2] = new Dimension(getDimensionsW(), getDimensionsH());
+        BUILDING_DIM = new Dimension(getDimensionsW(), getDimensionsH());
 
         RANDOM_NUM = RND.nextInt(1000 - 100) + 100;
-        BUILDING_VALUE[2] = RANDOM_NUM;
+        value = RANDOM_NUM;
 
         translate(DISP_W * .2, DISP_H / 1.5);
-        BUILDING_TWO.setTranslation(myTranslation.getTranslateX(),
+        BUILDING.setTranslation(myTranslation.getTranslateX(),
                 myTranslation.getTranslateY());
     }
 
     private void createTheBuildingOnRight() {
-        setDimensions((int) (DISP_W / 8.0), getUniqueRandomNum());
+        int RANDOM_NUM = (RND.nextInt(4 - 2) + 2);
+        setDimensions((int) (DISP_W / 8.0), ((DISP_H) / RANDOM_NUM));
 
-        BUILDING_DIM[3] = new Dimension(getDimensionsW(), getDimensionsH());
+        BUILDING_DIM = new Dimension(getDimensionsW(), getDimensionsH());
 
-        int RANDOM_NUM = RND.nextInt(1000 - 100) + 100;
-        BUILDING_VALUE[3] = RANDOM_NUM;
+        value = RND.nextInt(1000 - 100) + 100;
 
         translate(DISP_W - (DISP_W * .2), DISP_H / 1.5);
-        BUILDING_THREE.setTranslation(myTranslation.getTranslateX(),
+        BUILDING.setTranslation(myTranslation.getTranslateX(),
                 myTranslation.getTranslateY());
     }
 
-    private Boolean isBuildingDimTheSame() {
-        return getDimensionsH() == BUILDING_DIM[2].getHeight();
-    }
 
-    private int getUniqueRandomNum() {
-        int RANDOM_NUM = (RND.nextInt(4 - 2) + 2);
-        int height = ((DISP_H) / RANDOM_NUM);
-        while (isBuildingDimTheSame()) {
-            RANDOM_NUM = (RND.nextInt(4 - 2) + 2);
-            height = ((DISP_H) / RANDOM_NUM);
-        }
-        return height;
-    }
 
     private void setBuildingDamage() {
-        for (int i = 1; i <= 3; i++) {
-            float dam =
-                    (BUILDING_DIM[i].getWidth() * BUILDING_DIM[i].getHeight());
+        float dam = (BUILDING_DIM.getWidth() * BUILDING_DIM.getHeight())/4f;
 
-            BUILDING_DAMAGE[i] = (int) ((buildingDamage[i - 1] / dam) * 100);
+        damage = (int) ((buildingDamage / dam) * 100);
 
-            if (BUILDING_DAMAGE[i] > 100)
-                BUILDING_DAMAGE[i] = 100;
-        }
+        if (damage > 100)
+            damage = 100;
+
     }
 
     private String[] getLabels() {
         String[] labels = new String[2];
-        int i = whichBuildingIsMapViewTryingToDraw();
-        labels[0] = ("V: " + BUILDING_VALUE[i]);
-        labels[1] = ("D: " + BUILDING_DAMAGE[i] + "%");
+        labels[0] = ("V: " + value);
+        labels[1] = ("D: " + damage + "%");
 
         return labels;
     }

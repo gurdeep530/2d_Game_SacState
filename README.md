@@ -1,42 +1,41 @@
-🚁 Firefighting Helicopter Game
-A single-player helicopter simulation game developed as a college project using Java and Codename One. The objective is simple but urgent: save buildings by extinguishing fires before your fuel runs out!
+# 🚁 Firefighting Helicopter Game
 
-🕹️ Game Objective
-You pilot a helicopter tasked with putting out fires that break out in buildings across the map. Navigate to the river to collect water and drop it over fire zones marked by pink circles. If you run out of fuel before putting out all the fires, the mission fails.
+A single-player 2D simulation game developed in Java using the **Codename One** framework. The player controls a helicopter tasked with extinguishing fires in buildings while managing water and fuel resources. The game introduces a unique AI-controlled helicopter that supports the player by responding to user-marked fires.
 
-🧠 Key Feature: AI Helicopter Support
-One of the most exciting aspects of this game is the AI helicopter system. When a player clicks on a fire, the AI helicopter will:
+## 🎮 Game Objective
 
-Find the shortest route to the river
+The main goal is to put out all the fires represented by pink circles on the map. Fires break out in random buildings, and the player must fly the helicopter to collect water from the river and extinguish them. The game ends in one of two ways:
+- **Victory**: All fires are put out.
+- **Defeat**: The player runs out of helicopter fuel before completing the mission.
 
-Collect water
+## 🧠 Highlight Feature: AI Helicopter (Siegeline)
+An AI-controlled helicopter spawns during gameplay. When the player clicks on a fire, the AI helicopter calculates the shortest route to the river, collects water, and flies to the selected fire to assist in putting it out. This demonstrates basic pathfinding and AI decision-making in a game setting.
 
-Fly to the selected fire
+## 🔧 Technologies Used
+- Java
+- Codename One framework
+- Object-Oriented Programming
+- Simple game physics and state management
 
-Automatically extinguish it
+## 🕹️ Controls
 
-This brings an additional layer of strategy and interaction to the gameplay.
+- Use arrow keys or on-screen buttons (Codename One simulator) to move the helicopter.
+- Click on a fire to command the AI helicopter to assist.
+- Monitor water and fuel levels during gameplay (displayed on screen).
 
-🎮 How to Play
-Use the arrow keys or touch input to control your helicopter.
+## 📦 How to Run the Game
 
-Hover over the river to fill up your water tank.
+1. Make sure you have Java and [Codename One plugin](https://www.codenameone.com/) installed (e.g., in IntelliJ or NetBeans).
+2. Clone or unzip the project folder.
+3. Open the project in your IDE of choice with Codename One support.
+4. Run the `Main` class to start the game on the simulator.
 
-Fly over the pink fire circles and dump water to put out the fires.
+## 📝 Game Features
 
-Watch your fuel gauge — running out of fuel means game over!
+- Helicopter flight with limited fuel
+- Water collection from river source
+- Fire extinguishing mechanics
+- AI helicopter pathfinding
+- Win/loss condition logic
+- Clean, modular object-oriented code
 
-Click on a fire to assign it to the AI helicopter.
-
-✅ Win Condition
-Extinguish all the fires before your fuel runs out.
-
-❌ Lose Condition
-Your helicopter runs out of fuel before all fires are extinguished.
-
-🛠️ Technologies Used
-Language: Java
-
-Framework: Codename One
-
-Development Environment: NetBeans

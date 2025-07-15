@@ -8,7 +8,7 @@ The main goal is to put out all the fires represented by pink circles on the map
 - **Victory**: All fires are put out.
 - **Defeat**: The player runs out of helicopter fuel before completing the mission.
 
-## 🧠 Highlight Feature: AI Helicopter (Siegeline)
+## 🧠 Highlight Feature: AI Helicopter
 An AI-controlled helicopter spawns during gameplay. When the player clicks on a fire, the AI helicopter calculates the shortest route to the river, collects water, and flies to the selected fire to assist in putting it out. This demonstrates basic pathfinding and AI decision-making in a game setting.
 
 ## 🔧 Technologies Used
